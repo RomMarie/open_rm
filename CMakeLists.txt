@@ -13,5 +13,5 @@ catkin_package(
   DEPENDS OpenCV Boost
 )
 
-add_library(vision src/Vision/vision.cpp)
+add_library(vision include/open_rm/Vision/calibrage.h src/Vision/calibrage.cpp)
 target_link_libraries(vision ${OpenCV_LIBRARIES})
