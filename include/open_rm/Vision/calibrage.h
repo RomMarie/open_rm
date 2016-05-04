@@ -20,26 +20,11 @@ struct paramsCalib{
      */
     paramsCalib(double U0,double V0,double Au,double Av,double Xi);
 
-    /*!
-     * \brief coordonnée verticale (en pixels) du centre optique
-     */
-    double u0;
-    /*!
-     * \brief coordonnée horizontale (en pixels) du centre optique
-     */
-    double v0;
-    /*!
-     * \brief facteur de conversion m/pixels vertical
-     */
-    double au;
-    /*!
-     * \brief facteur de conversion m/pixels horizontal
-     */
-    double av;
-    /*!
-     * \brief paramètre de miroir (modèle unifié)
-     */
-    double xi;
+    double u0; ///< Coordonnée verticale (en pixels) du centre optique
+    double v0; ///< Coordonnée horizontale (en pixels) du centre optique
+    double au; ///< Facteur de conversion m/pixels vertical
+    double av; ///< Facteur de conversion m/pixels horizontal
+    double xi; ///< Paramètre de miroir (modèle unifié)
 };
 
 }

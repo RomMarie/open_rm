@@ -9,9 +9,11 @@ include_directories(include ${Boost_INCLUDE_DIRECTORIES} ${OpenCV_INCLUDE_DIRECT
 
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES open_rm
+  LIBRARIES vision geometrie
   DEPENDS OpenCV Boost
 )
 
 add_library(vision include/open_rm/Vision/calibrage.h src/Vision/calibrage.cpp)
 target_link_libraries(vision ${OpenCV_LIBRARIES})
+add_library(geometrie include/open_rm/Geometrie/bezier.h src/Geometrie/bezier.cpp)
+target_link_libraries(geometrie ${OpenCV_LIBRARIES})
