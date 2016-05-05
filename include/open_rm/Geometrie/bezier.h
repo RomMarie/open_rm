@@ -3,6 +3,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <open_rm/Algebre/equations.h>
+
 namespace rm{
 namespace Geometrie{
 

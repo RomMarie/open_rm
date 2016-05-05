@@ -94,7 +94,7 @@ void bezierCurve::draw(cv::Mat &img, cv::Scalar color, bool withPC)
             cv::circle(img,pc[i],3,color,CV_FILLED);
             cv::line(img,pc[i],pc[i+1],color);
         }
-        cv::circle(img,pc[3],3,color,CV_FILLED);
+        cv::circle(img,pc[pc.size()-1],3,color,CV_FILLED);
     }
 
     for(double t=0;t<=1;t+=0.001)
@@ -153,7 +153,46 @@ void bezierCurve::movePtCurve(double t, cv::Point2d dir, double scale)
  */
 double bezierCurve::closestPt(cv::Point2d pt)
 {
+    cv::Point2d A=pc[1]-pc[0];
+    cv::Point2d B=pc[0]+pc[2]-2*pc[1];
+    cv::Point2d pos=pc[0]-pt;
 
+    // On cherche les points P de la courbe de Bezier tels que PM.(dP / dt) = 0
+    // où M est le point pt passé en argument.
+    // Ils correspondent aux solutions d'une équation du troisieme ordre
+    double a=B.x*B.x+B.y*B.y;
+    double b=3.*(A.x*B.x+A.y*B.y);
+    double c=2.*(A.x*A.x+A.y*A.y)+pos.x*B.x+pos.y*B.y;
+    double d=pos.x*A.x+pos.y*A.y;
+
+    std::vector<double> sol= rm::Algebre::thirdOrderEq(a, b, c, d);
+    double t;
+    double dist;
+    double tMin=-1;
+    double distMin=1000000;
+
+    if(sol.size()>0)
+    {
+        // On cherche le point le plus proche parmi les solutions de l'équation du troisième ordre
+        for(unsigned int i = 0; i<sol.size(); i++)
+        {
+            t = sol[i];
+            if(t>=-0.001&&t<0)t=0; // On lutte contre les erreurs d'arrondis
+            if(t<=1.001&&t>1)t=1; // idem
+            if(t>=0&&t<=1)
+            {
+                pos = computePt(t);
+                dist = cv::norm(pt-pos);
+                if(dist<distMin)
+                {
+                    tMin = t;
+                    distMin = dist;
+                }
+            }
+        }
+    }
+
+    return tMin;
 }
 
 /*!
