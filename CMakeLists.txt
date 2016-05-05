@@ -17,7 +17,10 @@ add_library(vision include/open_rm/Vision/calibrage.h src/Vision/calibrage.cpp)
 target_link_libraries(vision ${OpenCV_LIBRARIES})
 add_library(geometrie include/open_rm/Geometrie/bezier.h src/Geometrie/bezier.cpp)
 target_link_libraries(geometrie ${OpenCV_LIBRARIES})
-add_library(algebre include/open_rm/Algebre/equations.h src/Algebre/equations.cpp)
+add_library(algebre
+include/open_rm/Algebre/polynomes.h src/Algebre/polynomes.cpp
+include/open_rm/Algebre/equations.h src/Algebre/equations.cpp
+)
 target_link_libraries(algebre geometrie ${OpenCV_LIBRARIES})
 
 add_executable(test_node src/test_node.cpp)

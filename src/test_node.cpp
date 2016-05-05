@@ -3,6 +3,7 @@
 
 #include <open_rm/Algebre/equations.h>
 #include <open_rm/Geometrie/bezier.h>
+#include <open_rm/Algebre/polynomes.h>
 
 int main(int argc,char ** argv){
 
@@ -16,8 +17,21 @@ int main(int argc,char ** argv){
     rm::Geometrie::bezierCurve bc(pc);
 
 
+    std::vector<double> N;
+    N.push_back(0);
+    N.push_back(-2);
+    N.push_back(3);
+    N.push_back(-1);
+    N.push_back(-1);
+    N.push_back(1);
+
+    std::vector<double> D,q,r;
+    D.push_back(1);
+    D.push_back(-1);
+    D.push_back(1);
 
 
+    rm::Algebre::divisionPolynomiale(N,D,q,r);
 
         cv::Mat img(500,500,cv::DataType<cv::Vec3b>::type);
 
