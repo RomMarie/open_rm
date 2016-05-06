@@ -11,14 +11,17 @@ using namespace std;
  * La fonction retourne \a q et \a r tels que N=qD+r
  * \note basé sur https://fr.wikipedia.org/wiki/Division_d'un_polyn%C3%B4me et https://rosettacode.org/wiki/Polynomial_long_division#C.2B.2B
  *
- * \param N Polynome servant de numérateur
- * \param D Polynome servant de dénominateur
- * \param q division euclidienne de N par D
- * \param r reste de la division euclidienne de N par D
+ * \param den Polynome servant de dénominateur
+ * \param Q Polynome résultat de la division euclidienne de l'instance par D
+ * \param R Polynome correspondant au reste de la division euclidienne de l'instance par D
  */
-void divisionPolynomiale(std::vector<double> N, std::vector<double> D, std::vector<double> &q, std::vector<double> &r)
+void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R)
 {
+    std::vector<double> D=den.coefs();
+    std::vector<double> N=_coefs;
     std::vector<double> d(N.size());
+    std::vector<double> q;
+    std::vector<double> r;
 
     int dd, dq, dr;
     int i;
@@ -59,6 +62,171 @@ void divisionPolynomiale(std::vector<double> N, std::vector<double> D, std::vect
         r[i] = N[i];
     }
 
+    Q.set(q);
+    R.set(r);
+
+}
+
+/*!
+ * \brief Constructeur par défaut
+ */
+Polynome::Polynome()
+{
+
+}
+
+/*!
+ * \brief Constructeur principal
+ * \param coefs Coefficients du polynome
+ */
+Polynome::Polynome(std::vector<double> coefs)
+{
+    set(coefs);
+}
+
+/*!
+ * \brief Constructeur de recopie
+ * \param poly Polynome à copier
+ */
+Polynome::Polynome(const Polynome &poly)
+{
+    _coefs=poly.coefs();
+}
+
+/*!
+ * \brief Calcule la fonction f(x)=Polynome
+ * \param x Valeur désirée de l'inconnue
+ * \return Valeur du polynome en x
+ */
+double Polynome::compute(double x)
+{
+    double res=0;
+    for(unsigned int i=0;i<_coefs.size();i++){
+        res+=_coefs[i]*pow(x,i);
+    }
+    return res;
+}
+
+/*!
+ * \brief Calcule l'expression de la dérivée du polynome
+ * \return Polynome correspondant à la dérivée du polynome
+ */
+Polynome Polynome::derivate()
+{
+    std::vector<double> coefs;
+
+    if(_coefs.size()<=1){
+        coefs.push_back(0);
+        return(Polynome(coefs));
+    }
+
+    for(unsigned int i=1;i<_coefs.size();i++){
+        coefs.push_back(i*_coefs[i-1]);
+    }
+    return(Polynome(coefs));
+}
+
+/*!
+ * \brief Surcharge de l'opérateur + (effectue l'addition de deux polynomes)
+ * \param poly Polynome à additionner
+ * \return Polynome résultat de l'addition
+ */
+Polynome Polynome::operator+(const Polynome &poly)
+{
+    std::vector<double> coefsRes;
+    std::vector<double> coefsPoly2=poly.coefs();
+
+    if(coefsPoly2.size()>_coefs.size()){
+        for(unsigned int i=0;i<coefsPoly2.size();i++){
+            if(i<_coefs.size()){
+                coefsRes.push_back(coefsPoly2[i]+_coefs[i]);
+            }
+            else{
+                coefsRes.push_back(coefsPoly2[i]);
+            }
+        }
+    }
+    else{
+        for(unsigned int i=0;i<_coefs.size();i++){
+            if(i<coefsPoly2.size()){
+                coefsRes.push_back(coefsPoly2[i]+_coefs[i]);
+            }
+            else{
+                coefsRes.push_back(_coefs[i]);
+            }
+        }
+    }
+    return Polynome(coefsRes);
+}
+
+/*!
+ * \brief Surcharge de l'opérateur + (effectue l'addition de deux polynomes)
+ * \param poly Polynome à additionner
+ * \return Polynome résultat de l'addition
+ */
+Polynome Polynome::operator-(const Polynome &poly)
+{
+    std::vector<double> coefsPoly2=poly.coefs();
+
+    std::vector<double> coefsRes(max(coefsPoly2.size(),_coefs.size()));
+    if(coefsPoly2.size()>_coefs.size()){
+        for(unsigned int i=0;i<coefsPoly2.size();i++){
+            if(i<_coefs.size()){
+                coefsRes.push_back(-coefsPoly2[i]+_coefs[i]);
+            }
+            else{
+                coefsRes.push_back(-coefsPoly2[i]);
+            }
+        }
+    }
+    else{
+        for(unsigned int i=0;i<_coefs.size();i++){
+            if(i<coefsPoly2.size()){
+                coefsRes.push_back(-coefsPoly2[i]+_coefs[i]);
+            }
+            else{
+                coefsRes.push_back(_coefs[i]);
+            }
+        }
+    }
+    return Polynome(coefsRes);
+
+}
+
+/*!
+ * \brief Surcharge de l'opérateur * (multiplie deux polynomes entre eux)
+ * \param poly
+ * \return
+ */
+Polynome Polynome::operator*(const Polynome &poly)
+{
+    std::vector<double> res(poly.coefs().size()+_coefs.size()-1,0.);
+
+    std::vector<double> coefs=poly.coefs();
+    for(unsigned int i=0;i<coefs.size();i++){
+        for(unsigned int j=0;j<_coefs.size();j++){
+            res[i+j]+=coefs[i]*_coefs[j];
+        }
+    }
+    return Polynome(res);
+}
+
+/*!
+ * \brief Attribue de nouveaux coefficients au polynome
+ * \param coefs Coefficients du polynome
+ */
+void Polynome::set(std::vector<double> coefs)
+{
+    _coefs=coefs;
+}
+
+/*!
+ * \brief Accesseur aux coefficients du polynome porté par l'instance
+ * \return vecteur de double contenant les coefficients par ordre croissant
+ */
+std::vector<double> Polynome::coefs() const
+{
+    return _coefs;
 }
 
 }

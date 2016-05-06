@@ -4,8 +4,32 @@
 namespace rm{
 namespace Algebre{
 
-void divisionPolynomiale(std::vector<double> N,std::vector<double> D,
-                         std::vector<double>& q,std::vector<double>& r);
+/*!
+ * \brief Classe permettant la manipulation d'un polynome d'ordre quelconque
+ *
+ */
+class Polynome{
+public:
+    // Constructeurs
+    Polynome();
+    Polynome(std::vector<double> coefs);
+    Polynome(const Polynome& poly);
+
+
+    // Opérations sur polynome
+    double compute(double x);
+    Polynome derivate();
+    Polynome operator+(const Polynome& poly);
+    Polynome operator-(const Polynome& poly);
+    Polynome operator*(const Polynome& poly);
+    void divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R);
+
+    // Méthodes get/set
+    void set(std::vector<double> coefs);
+    std::vector<double> coefs() const;
+private:
+    std::vector<double> _coefs; ///< Coefficients du polynome (ordre croissant)
+};
 
 }
 }

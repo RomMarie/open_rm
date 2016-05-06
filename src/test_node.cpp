@@ -11,7 +11,7 @@ int main(int argc,char ** argv){
     std::vector<cv::Point2d> pc;
     pc.push_back(cv::Point2d(100,400));
     pc.push_back(cv::Point2d(250,150));
-    pc.push_back(cv::Point2d(450,450));
+    pc.push_back(cv::Point2d(450,550));
 //    pc.push_back(cv::Point2d(50,350));
 
     rm::Geometrie::bezierCurve bc(pc);
@@ -25,15 +25,16 @@ int main(int argc,char ** argv){
     N.push_back(-1);
     N.push_back(1);
 
-    std::vector<double> D,q,r;
+    std::vector<double> D;
     D.push_back(1);
     D.push_back(-1);
     D.push_back(1);
 
 
-    rm::Algebre::divisionPolynomiale(N,D,q,r);
+    rm::Algebre::Polynome n(N),d(D),q,r;
+    n.divisionPolynomiale(D,q,r);
 
-        cv::Mat img(500,500,cv::DataType<cv::Vec3b>::type);
+        cv::Mat img(600,500,cv::DataType<cv::Vec3b>::type);
 
         cv::Point2d pt(100,400);
 
