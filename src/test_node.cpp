@@ -39,7 +39,7 @@ int main(int argc,char ** argv){
 
 
     rm::Algebre::Polynome n(N),d(D),q,r;
-    std::cout<<n<<std::endl;
+    std::cout<<n<<" "<<n.derivate()<<std::endl;
     n.divisionPolynomiale(D,q,r);
 
         cv::Mat img(600,500,cv::DataType<cv::Vec3b>::type);

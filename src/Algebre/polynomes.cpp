@@ -121,7 +121,7 @@ Polynome Polynome::derivate()
     }
 
     for(unsigned int i=1;i<_coefs.size();i++){
-        coefs.push_back(i*_coefs[i-1]);
+        coefs.push_back(i*_coefs[i]);
     }
     return(Polynome(coefs));
 }
@@ -245,6 +245,7 @@ Polynome Polynome::operator%(const Polynome &poly)
  */
 std::ostream & operator<<(std::ostream &os, const Polynome &poly)
 {
+    os<<"[";
     for(int i=poly.coefs().size()-1;i>=0;i--){
         if(poly.coefs()[i]!=0){
             if(i!=poly.coefs().size()-1){
@@ -254,13 +255,25 @@ std::ostream & operator<<(std::ostream &os, const Polynome &poly)
                     os<<" + ";
             }
 
-            if(abs(poly.coefs()[i])==1)
-                os<<"x^"<<i;
-            else
-                os<<abs(poly.coefs()[i])<<"x^"<<i;
+            if(abs(poly.coefs()[i])==1){
+                if(i>1)
+                    os<<"x^"<<i;
+                else if(i==1)
+                    os<<"x";
+                else
+                    os<<"1";
+            }
+            else{
+                if(i>1)
+                    os<<abs(poly.coefs()[i])<<"x^"<<i;
+                else if(i==1)
+                    os<<abs(poly.coefs()[i])<<"x";
+                else
+                    os<<abs(poly.coefs()[i]);
+            }
         }
     }
-    os<<std::endl;
+    os<<"]";
     return os;
 }
 
