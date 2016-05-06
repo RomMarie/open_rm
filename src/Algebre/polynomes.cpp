@@ -238,6 +238,33 @@ Polynome Polynome::operator%(const Polynome &poly)
 }
 
 /*!
+ * \brief Surcharge de l'opérateur << (pour affichage via cout)
+ * \param os Stream d'entrée
+ * \param poly Polynome à afficher
+ * \return Stream de sortie
+ */
+std::ostream & operator<<(std::ostream &os, const Polynome &poly)
+{
+    for(int i=poly.coefs().size()-1;i>=0;i--){
+        if(poly.coefs()[i]!=0){
+            if(i!=poly.coefs().size()-1){
+                if(poly.coefs().size()<0)
+                    os<<" - ";
+                else
+                    os<<" + ";
+            }
+
+            if(abs(poly.coefs()[i])==1)
+                os<<"x^"<<i;
+            else
+                os<<abs(poly.coefs()[i])<<"x^"<<i;
+        }
+    }
+    os<<std::endl;
+    return os;
+}
+
+/*!
  * \brief Attribue de nouveaux coefficients au polynome
  * \param coefs Coefficients du polynome
  */

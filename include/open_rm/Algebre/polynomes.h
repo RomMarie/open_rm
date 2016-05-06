@@ -24,7 +24,7 @@ public:
     Polynome operator*(const Polynome& poly);
     Polynome operator/(const Polynome& poly);
     Polynome operator%(const Polynome& poly);
-    friend ostream& operator<<(ostream& os, const Date& dt);
+    friend std::ostream& operator<<(std::ostream& os, const Polynome& poly);
 
     void divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R);
 
