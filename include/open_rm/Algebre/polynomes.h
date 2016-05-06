@@ -22,6 +22,10 @@ public:
     Polynome operator+(const Polynome& poly);
     Polynome operator-(const Polynome& poly);
     Polynome operator*(const Polynome& poly);
+    Polynome operator/(const Polynome& poly);
+    Polynome operator%(const Polynome& poly);
+    friend ostream& operator<<(ostream& os, const Date& dt);
+
     void divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R);
 
     // Méthodes get/set

@@ -1,17 +1,44 @@
 #include <open_rm/Geometrie/bezier.h>
 #include <open_rm/Algebre/equations.h>
-#include <open_rm/Algebre/polynomes.h>
 
 namespace rm{
 namespace Geometrie{
 
 /*!
+ * \brief Constructeur par défaut
+ */
+bezierCurve::bezierCurve()
+{
+    _polyOK=false;
+    _withPoly=false;
+}
+
+/*!
  * \brief Constructeur principal
  * \param ptsControle points de controle de la courbe de Bézier
+ * \param withPoly Indique s'il faut précalculer le polynome définissant la courbe et sa dérivée (oui par défaut)
  */
-bezierCurve::bezierCurve(std::vector<cv::Point2d> ptsControle)
+bezierCurve::bezierCurve(std::vector<cv::Point2d> ptsControle, bool withPoly)
 {
-    pc=ptsControle;
+    _pc=ptsControle;
+    _polyOK=false;
+    _withPoly=withPoly;
+    if(withPoly)
+        buildPoly();
+}
+
+/*!
+ * \brief Définit l'ensemble des points de controle de la courbe
+ * \param ptsControle Vecteur contenant les nouveaux points de controle
+ * \param withPoly Indique s'il faut précalculer le polynome définissant la courbe et sa dérivée (oui par défaut)
+ */
+void bezierCurve::set(std::vector<cv::Point2d> ptsControle, bool withPoly)
+{
+    _pc=ptsControle;
+    _polyOK=false;
+    _withPoly=withPoly;
+    if(withPoly)
+        buildPoly();
 }
 
 /*!
@@ -20,7 +47,7 @@ bezierCurve::bezierCurve(std::vector<cv::Point2d> ptsControle)
  */
 unsigned int bezierCurve::degre()
 {
-    return pc.size()-1;
+    return _pc.size()-1;
 }
 
 /*!
@@ -58,7 +85,7 @@ bezierCurve bezierCurve::split()
     pc2.push_back(1/18.*(6*p[3]-27*p[4]+54*p[5]-15*p[6]));
     pc2.push_back(p[6]);
 
-    pc=pc1;
+    _pc=pc1;
 
     return bezierCurve(pc2);
 
@@ -71,7 +98,26 @@ bezierCurve bezierCurve::split()
  */
 cv::Point2d bezierCurve::computePt(double t)
 {
-    return deCasteljau(pc,t);
+    return deCasteljau(_pc,t);
+}
+
+/*!
+ * \brief Détermine un point de la courbe en utilisant son expression polynomiale (beaucoup plus rapide)
+ * \param t Position du point considéré (entre 0 et 1)
+ * \return Coordonnées du point appartenant à la courbe
+ */
+cv::Point2d bezierCurve::computePtPoly(double t)
+{
+    return cv::Point2d(_polyX.compute(t),_polyY.compute(t));
+}
+
+/*!
+ * \brief Retourne les points de controle de la courbe
+ * \return Vecteur contenant les points de controle de la courbe
+ */
+std::vector<cv::Point2d> bezierCurve::pc() const
+{
+    return _pc;
 }
 
 /*!
@@ -84,19 +130,19 @@ void bezierCurve::draw(cv::Mat &img, cv::Scalar color, bool withPC)
 {
     // On commence par vérifier que l'image peut afficher le patch
     std::vector<cv::Point> pts; // La fonction boundingRect de OpenCV n'accepte que des cv::Point
-    for(unsigned int i=0;i<pc.size();i++)
-        pts.push_back(pc[i]);
+    for(unsigned int i=0;i<_pc.size();i++)
+        pts.push_back(_pc[i]);
     cv::Rect bb=cv::boundingRect(pts);
     if(bb.x<0||bb.y<0||bb.height+bb.y>=img.rows||bb.width+bb.x>=img.cols)
         return;
 
     // Si les points de controle doivent etre affichés
     if(withPC){
-        for(unsigned int i=0;i<pc.size()-1;i++){
-            cv::circle(img,pc[i],3,color,CV_FILLED);
-            cv::line(img,pc[i],pc[i+1],color);
+        for(unsigned int i=0;i<_pc.size()-1;i++){
+            cv::circle(img,_pc[i],3,color,CV_FILLED);
+            cv::line(img,_pc[i],_pc[i+1],color);
         }
-        cv::circle(img,pc[pc.size()-1],3,color,CV_FILLED);
+        cv::circle(img,_pc[_pc.size()-1],3,color,CV_FILLED);
     }
 
     // On échantillonne la courbe en 1000 points (c'est une fonction de deboggage, ca devrait suffire
@@ -112,8 +158,11 @@ void bezierCurve::draw(cv::Mat &img, cv::Scalar color, bool withPC)
  */
 void bezierCurve::movePtCtrl(int ind, cv::Point2d dir, double scale)
 {
-    if(pc.size()>ind) // Si le point de controle existe
-        pc[ind]+=dir*scale; // On le déplace
+    if(_pc.size()>ind){ // Si le point de controle existe
+        _pc[ind]+=dir*scale; // On le déplace
+        if(_withPoly)
+            buildPoly();
+    }
 }
 
 /*!
@@ -126,57 +175,72 @@ void bezierCurve::movePtCtrl(int ind, cv::Point2d dir, double scale)
  */
 double bezierCurve::distToCurve(cv::Point2d pt,double& t)
 {
+    // Calcul des polynomes définissant la courbe si pas encore fait
+    if(!_polyOK)
+        buildPoly();
 
+    // Calcul du polynome g(t)=Poly'(t).(pt-poly(t))
+    std::vector<double> px,py;
+    px.push_back(pt.x);
+    py.push_back(pt.y);
+    rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(px)-_polyX)+_dpolyY*(rm::Algebre::Polynome(py)-_polyY);
+
+    // Construction de la séquence de Sturm
+    std::vector<rm::Algebre::Polynome> S;
+    S.push_back(g);
+    S.push_back(g.derivate());
+    rm::Algebre::Polynome s;
+    do{
+        s=S[S.size()-2]%S[S.size()-1];
+    }while(s.coefs().size()>1);
 }
 
 /*!
- * \brief Détermine le point d'une courbe de Bezier quadratique le plus proche d'un point donné
- * \param pt Point dont on cherche la projection
- * \return indice t (entre 0 et 1) du point de la courbe le plus proche
- * \note basé sur http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html
+ * \brief Exprime la courbe de Bézier sous forme d'un polynome
  */
-double bezierCurve::closestPt(cv::Point2d pt)
+void bezierCurve::buildPoly()
 {
-    cv::Point2d A=pc[1]-pc[0];
-    cv::Point2d B=pc[0]+pc[2]-2*pc[1];
-    cv::Point2d pos=pc[0]-pt;
-
-    // On cherche les points P de la courbe de Bezier tels que PM.(dP / dt) = 0
-    // où M est le point pt passé en argument.
-    // Ils correspondent aux solutions d'une équation du troisieme ordre
-    double a=B.x*B.x+B.y*B.y;
-    double b=3.*(A.x*B.x+A.y*B.y);
-    double c=2.*(A.x*A.x+A.y*A.y)+pos.x*B.x+pos.y*B.y;
-    double d=pos.x*A.x+pos.y*A.y;
-
-    std::vector<double> sol= rm::Algebre::thirdOrderEq(a, b, c, d);
-    double t;
-    double dist;
-    double tMin=-1;
-    double distMin=1000000;
-
-    if(sol.size()>0)
-    {
-        // On cherche le point le plus proche parmi les solutions de l'équation du troisième ordre
-        for(unsigned int i = 0; i<sol.size(); i++)
-        {
-            t = sol[i];
-            if(t>=-0.001&&t<0)t=0; // On lutte contre les erreurs d'arrondis
-            if(t<=1.001&&t>1)t=1; // idem
-            if(t>=0&&t<=1)
-            {
-                pos = computePt(t);
-                dist = cv::norm(pt-pos);
-                if(dist<distMin)
-                {
-                    tMin = t;
-                    distMin = dist;
-                }
-            }
-        }
+    std::vector<double> pcX,pcY;
+    for(unsigned int i=0;i<_pc.size();i++){
+        pcX.push_back(_pc[i].x);
+        pcY.push_back(_pc[i].y);
     }
 
-    return tMin;
+    _polyX=deCasteljauPoly(pcX);
+    _polyY=deCasteljauPoly(pcY);
+   _dpolyX=_polyX.derivate();
+   _dpolyY=_polyY.derivate();
+
+   _withPoly=true;
+   _polyOK=true;
+}
+
+/*!
+ * \brief Algorithme récursif de DeCasteljau pour l'expression de la courbe sous forme de polygone
+ *
+ * Il s'agit d'une méthode privée de la structure, appelée par la méthode privée buildPoly
+ *
+ * \param pc points de controle considérés à une itération donnée
+ * \return Polynome à une itération donnée
+ */
+Algebre::Polynome bezierCurve::deCasteljauPoly(std::vector<double> Pc)
+{
+    std::vector<double> res;
+    if(Pc.size()==1){
+        res.push_back(Pc[0]);
+        return(rm::Algebre::Polynome(res));
+    }
+
+    std::vector<double> poly1,poly2;
+    poly1.push_back(1);
+    poly1.push_back(-1);
+    poly2.push_back(0);
+    poly2.push_back(1);
+
+    std::vector<double> v1,v2;
+    v1.insert(v1.begin(),Pc.begin(),Pc.begin()+Pc.size()-1);
+    v2.insert(v2.begin(),Pc.begin()+1,Pc.begin()+Pc.size());
+    return rm::Algebre::Polynome(poly1)*deCasteljauPoly(v1)+rm::Algebre::Polynome(poly2)*deCasteljauPoly(v2);
 }
 
 /*!
@@ -202,29 +266,6 @@ cv::Point2d bezierCurve::deCasteljau(std::vector<cv::Point2d> Pc, float t)
     return (1-t)*deCasteljau(v1,t)+t*deCasteljau(v2,t);
 }
 
-/*!
- * \brief Fonction g définie dans https://hal.archives-ouvertes.fr/file/index/docid/518379/filename/Xiao-DiaoChen2007c.pdf
- * \param pt Point dont on cherche la distance à la courbe
- * \param t Point d'évaluation de g sur la courbe (entre 0 et 1)
- * \return Evaluation de g(t)
- */
-double bezierCurve::g(cv::Point2d pt, double t)
-{
-    std::vector<double> coefsX,coefsY;
-    coefsX.push_back(pc[0].x);
-    coefsX.push_back(3*(pc[1].x-pc[0].x));
-    coefsX.push_back(3*(pc[0].x-2*pc[1].x+pc[2].x));
-    coefsX.push_back(pc[3].x+3*pc[1].x-3*pc[2].x-pc[0].x);
-    coefsX.push_back(pc[0].y);
-    coefsX.push_back(3*(pc[1].y-pc[0].y));
-    coefsX.push_back(3*(pc[0].y-2*pc[1].y+pc[2].y));
-    coefsX.push_back(pc[3].y+3*pc[1].y-3*pc[2].y-pc[0].y);
-
-    rm::Algebre::Polynome Vx(coefsX),Vy(coefsY);
-    rm::Algebre::Polynome Vprimex(Vx.derivate()),Vprimey(Vy.derivate());
-
-
-}
 
 }
 }

@@ -212,6 +212,32 @@ Polynome Polynome::operator*(const Polynome &poly)
 }
 
 /*!
+ * \brief Surcharge de l'opérateur / (quotient de la division euclidienne entre deux polynomes)
+ * \param poly Polynome correspondant au dénominateur
+ * \return Polynome correspondant à la division entière par \a poly
+ */
+Polynome Polynome::operator/(const Polynome &poly)
+{
+    Polynome R;
+    Polynome Q;
+    divisionPolynomiale(poly,Q,R);
+    return Q;
+}
+
+/*!
+ * \brief Surcharge de l'opérateur % (reste de la division polynomiale)
+ * \param poly Dénominateur de la division eutre deux polynomes
+ * \return reste de la division entre deux polynomes
+ */
+Polynome Polynome::operator%(const Polynome &poly)
+{
+    Polynome R;
+    Polynome Q;
+    divisionPolynomiale(poly,Q,R);
+    return R;
+}
+
+/*!
  * \brief Attribue de nouveaux coefficients au polynome
  * \param coefs Coefficients du polynome
  */

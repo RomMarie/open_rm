@@ -12,9 +12,16 @@ int main(int argc,char ** argv){
     pc.push_back(cv::Point2d(100,400));
     pc.push_back(cv::Point2d(250,150));
     pc.push_back(cv::Point2d(450,550));
-//    pc.push_back(cv::Point2d(50,350));
+    pc.push_back(cv::Point2d(50,350));
 
     rm::Geometrie::bezierCurve bc(pc);
+
+    for(int i=0;i<1000000;i++)
+        bc.computePtPoly(0.25);
+
+    std::cout<<bc.computePt(0.25)<<std::endl;
+    std::cout<<bc.computePtPoly(0.25)<<std::endl;
+
 
 
     std::vector<double> N;
@@ -41,6 +48,5 @@ int main(int argc,char ** argv){
 
     bc.draw(img,cv::Scalar(0,0,255));
 
-    cv::circle(img,bc.computePt(bc.closestPt(pt)),3,cv::Scalar(255,0,0));
     cv::imshow("img",img);cv::waitKey();
 }
