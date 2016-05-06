@@ -17,21 +17,18 @@ using namespace std;
  */
 void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R)
 {
-    std::vector<double> D=den.coefs();
     std::vector<double> N=_coefs;
     std::vector<double> d(N.size());
-    std::vector<double> q;
-    std::vector<double> r;
 
     int dd, dq, dr;
     int i;
 
     unsigned int dN=N.size()-1;
-    unsigned int dD=D.size()-1;
+    unsigned int dD=den.coefs().size()-1;
     dq = dN-dD;
-    dr = dN-dD;
-    q.resize(dq+1);
-    r.resize(dr+1);
+    dr = dD;
+    std::vector<double> q(dq+1);
+    std::vector<double> r(dr+1);
     if( dN >= dD ) {
         while(dN >= dD) {
             for( i = 0 ; i < dN + 1 ; i++ ) {
@@ -39,7 +36,7 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
             }
 
             for( i = 0 ; i < dD + 1 ; i++ ) {
-                d[i+dN-dD] = D[i];
+                d[i+dN-dD] = den.coefs()[i];
             }
             dd = dN;
 
@@ -58,9 +55,18 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
 
     }
 
+
+
+
     for( i = 0 ; i < dN + 1 ; i++ ) {
         r[i] = N[i];
     }
+
+    while(q[q.size()-1]==0&&q.size()>0)
+        q.pop_back();
+
+    while(r[r.size()-1]==0&&r.size()>0)
+        r.pop_back();
 
     Q.set(q);
     R.set(r);
@@ -160,15 +166,14 @@ Polynome Polynome::operator+(const Polynome &poly)
 }
 
 /*!
- * \brief Surcharge de l'opérateur + (effectue l'addition de deux polynomes)
+ * \brief Surcharge de l'opérateur - (effectue la soustraction de deux polynomes)
  * \param poly Polynome à additionner
  * \return Polynome résultat de l'addition
  */
 Polynome Polynome::operator-(const Polynome &poly)
 {
     std::vector<double> coefsPoly2=poly.coefs();
-
-    std::vector<double> coefsRes(max(coefsPoly2.size(),_coefs.size()));
+    std::vector<double> coefsRes;
     if(coefsPoly2.size()>_coefs.size()){
         for(unsigned int i=0;i<coefsPoly2.size();i++){
             if(i<_coefs.size()){
@@ -234,6 +239,7 @@ Polynome Polynome::operator%(const Polynome &poly)
     Polynome R;
     Polynome Q;
     divisionPolynomiale(poly,Q,R);
+    std::cout<<R<<std::endl;
     return R;
 }
 
@@ -249,11 +255,13 @@ std::ostream & operator<<(std::ostream &os, const Polynome &poly)
     for(int i=poly.coefs().size()-1;i>=0;i--){
         if(poly.coefs()[i]!=0){
             if(i!=poly.coefs().size()-1){
-                if(poly.coefs().size()<0)
+                if(poly.coefs()[i]<0)
                     os<<" - ";
                 else
                     os<<" + ";
             }
+            else if(poly.coefs()[i]<0)
+                os<<"-";
 
             if(abs(poly.coefs()[i])==1){
                 if(i>1)

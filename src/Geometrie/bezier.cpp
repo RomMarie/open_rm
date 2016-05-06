@@ -192,7 +192,12 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     rm::Algebre::Polynome s;
     do{
         s=S[S.size()-2]%S[S.size()-1];
+        S.push_back(s);
     }while(s.coefs().size()>1);
+
+    for(int i=0;i<S.size();i++){
+        std::cout<<"S_"<<i<<" = "<<S[i]<<std::endl;
+    }
 }
 
 /*!
