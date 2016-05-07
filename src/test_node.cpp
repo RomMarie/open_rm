@@ -11,8 +11,8 @@ int main(int argc,char ** argv){
     std::vector<cv::Point2d> pc;
     pc.push_back(cv::Point2d(100,400));
     pc.push_back(cv::Point2d(250,150));
-    pc.push_back(cv::Point2d(450,550));
-    pc.push_back(cv::Point2d(50,350));
+    pc.push_back(cv::Point2d(350,550));
+    pc.push_back(cv::Point2d(250,350));
 
     rm::Geometrie::bezierCurve bc(pc);
 

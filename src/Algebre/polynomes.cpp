@@ -74,6 +74,60 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
 }
 
 /*!
+ * \brief Identifie le nombre de racines réelles du polynome entre chaque intervalle de dimension \a step entre \a start et \a end
+ * \note voir https://en.wikipedia.org/wiki/Sturm's_theorem pour plus les détails de la méthode
+ * \param start Valeur de début de l'analyse du polynome
+ * \param end Valeur de fin de l'analyse du polynome
+ * \param step Pas des intervalles considérés
+ * \return Vecteur retournant pour chaque intervalle le nombre de racines réelles du polynome s'y trouvant
+ */
+std::vector<int> Polynome::sturmSequence(double start, double end, double step)
+{
+    // Construction de la séquence de Sturm
+    std::vector<Polynome> S;
+    S.push_back(*this);
+    S.push_back(derivate());
+    Polynome s;
+    do{
+        s=S[S.size()-2]%S[S.size()-1];
+        s.invert();
+        S.push_back(s);
+    }while(s.coefs().size()>1);
+
+    // Evaluation de S pour chaque borne de chaque intervalle (start+n*step)
+    std::vector<std::vector<double> > Ss;
+    for(double i=start;i<end;i+=step){
+        std::vector<double> s_i;
+        for(unsigned int j=0;j<S.size();j++){
+            s_i.push_back(S[j].compute(i));
+        }
+        Ss.push_back(s_i);
+    }
+
+    // Calcul du nombre de changement de signe pour chaque borne
+    std::vector<int> nSwap;
+    for(unsigned int i=0;i<Ss.size();i++){
+        nSwap.push_back(0);
+        for(unsigned int j=1;j<Ss[i].size();j++){
+            if(Ss[i][j-1]/Ss[i][j]<0)
+                nSwap[i]++;
+        }
+    }
+
+
+    // Calcul du nombre de racines dans chaque intervalle
+    std::vector<int> nRacines;
+    for(unsigned int i=1;i<nSwap.size();i++){
+        if(nSwap[i-1]-nSwap[i]>0)
+            nRacines.push_back(nSwap[i-1]-nSwap[i]);
+        else
+            nRacines.push_back(0);
+    }
+
+    return nRacines;
+}
+
+/*!
  * \brief Constructeur par défaut
  */
 Polynome::Polynome()
@@ -97,6 +151,16 @@ Polynome::Polynome(std::vector<double> coefs)
 Polynome::Polynome(const Polynome &poly)
 {
     _coefs=poly.coefs();
+}
+
+/*!
+ * \brief Applique un facteur -1 à chaque coefficient du polynome
+ */
+void Polynome::invert()
+{
+    for(unsigned int i=0;i<_coefs.size();i++){
+        _coefs[i]*=-1;
+    }
 }
 
 /*!
@@ -239,7 +303,6 @@ Polynome Polynome::operator%(const Polynome &poly)
     Polynome R;
     Polynome Q;
     divisionPolynomiale(poly,Q,R);
-    std::cout<<R<<std::endl;
     return R;
 }
 

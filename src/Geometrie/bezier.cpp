@@ -185,19 +185,25 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     py.push_back(pt.y);
     rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(px)-_polyX)+_dpolyY*(rm::Algebre::Polynome(py)-_polyY);
 
-    // Construction de la séquence de Sturm
-    std::vector<rm::Algebre::Polynome> S;
-    S.push_back(g);
-    S.push_back(g.derivate());
-    rm::Algebre::Polynome s;
-    do{
-        s=S[S.size()-2]%S[S.size()-1];
-        S.push_back(s);
-    }while(s.coefs().size()>1);
+    // Sequence de Sturm pour identifier la position des racines
+    std::vector<int> res=g.sturmSequence(0,1,0.1);
 
-    for(int i=0;i<S.size();i++){
-        std::cout<<"S_"<<i<<" = "<<S[i]<<std::endl;
+    // On vérifie que chaque intervalle contient au plus une racine
+    // Sinon, on applique de nouveau la séquence de Sturm pour subdiviser l'intervalle en question
+    // jusqu'à obtenir une racine par intervalle
+    for(unsigned int i=0;i<res.size();i++){
+        if(res[i]>1){
+            double borneMin=i*0.1;
+            double borneMax=(i+1)*0.1;
+            double pas=0.1;
+            bool ok=false;
+            while(!ok){
+                std::vector<int> resTmp=g.sturmSequence(borneMin,borneMax,pas);
+            }
+        }
     }
+
+
 }
 
 /*!
@@ -213,11 +219,11 @@ void bezierCurve::buildPoly()
 
     _polyX=deCasteljauPoly(pcX);
     _polyY=deCasteljauPoly(pcY);
-   _dpolyX=_polyX.derivate();
-   _dpolyY=_polyY.derivate();
+    _dpolyX=_polyX.derivate();
+    _dpolyY=_polyY.derivate();
 
-   _withPoly=true;
-   _polyOK=true;
+    _withPoly=true;
+    _polyOK=true;
 }
 
 /*!

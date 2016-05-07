@@ -17,6 +17,7 @@ public:
 
 
     // Opérations sur polynome
+    void invert();
     double compute(double x);
     Polynome derivate();
     Polynome operator+(const Polynome& poly);
@@ -27,6 +28,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Polynome& poly);
 
     void divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R);
+    std::vector<int> sturmSequence(double start,double end, double step);
 
     // Méthodes get/set
     void set(std::vector<double> coefs);
