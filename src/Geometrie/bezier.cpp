@@ -186,24 +186,53 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(px)-_polyX)+_dpolyY*(rm::Algebre::Polynome(py)-_polyY);
 
     // Sequence de Sturm pour identifier la position des racines
-    std::vector<int> res=g.sturmSequence(0,1,0.1);
+    std::vector<rm::Intervalles::Intervalle<int> > intervalles=g.sturmSequence(0,1,1);
 
     // On vérifie que chaque intervalle contient au plus une racine
     // Sinon, on applique de nouveau la séquence de Sturm pour subdiviser l'intervalle en question
     // jusqu'à obtenir une racine par intervalle
-    for(unsigned int i=0;i<res.size();i++){
-        if(res[i]>1){
-            double borneMin=i*0.1;
-            double borneMax=(i+1)*0.1;
-            double pas=0.1;
-            bool ok=false;
-            while(!ok){
-                std::vector<int> resTmp=g.sturmSequence(borneMin,borneMax,pas);
+    bool stop;
+    do{
+        for(unsigned int i=0;i<intervalles.size();i++){
+            std::cout<<intervalles[i]<<std::endl;
+        }
+        std::cout<<std::endl;
+        stop=true;
+        for(unsigned int i=0;i<intervalles.size();i++){
+            if(intervalles[i].data()>1){
+                stop=false;
+                std::vector<rm::Intervalles::Intervalle<int> > newIntervalles;
+                newIntervalles=g.sturmSequence(intervalles[i].borneInf(),
+                                             intervalles[i].borneSup(),
+                                             0.1*(intervalles[i].borneSup()-intervalles[i].borneInf()));
+                for(unsigned int j=0;j<intervalles.size();j++){
+                    if(i!=j)
+                        newIntervalles.push_back(intervalles[j]);
+                }
+                intervalles=newIntervalles;
+                i=-1;
             }
         }
+    }while(!stop);
+
+    // identification des intervalles intéressants (où le zéro de la fonction g correspond effectivement
+    // à un minimum local de la distance au point
+    std::vector<rm::Intervalles::Intervalle<int> > intervallesTmp;
+    for(unsigned int i=0;i<intervalles.size();i++){
+        if(g.compute(intervalles[i].borneInf())<0&&g.compute(intervalles[i].borneSup())>0)
+            intervallesTmp.push_back(intervalles[i]);
     }
+    intervalles=intervallesTmp;
 
+    // On sait maintenant que, sur les intervalles qui restent, la fonction g est monotone, et passe par 0
+    // On converge donc vers une bonne approximation de la racine en divisant à chaque itération par 2 l'intervalle
+    // suivant le signe de la fonction g en son milieu.
+    // Pour l'instant, nous proposons une précision de la solution au centième. A voir si c'est suffisant
+    for(unsigned int i=0;i<intervalles.size();i++){
+        while(intervalles[i].largeur()>0.01){
 
+        }
+    }
 }
 
 /*!

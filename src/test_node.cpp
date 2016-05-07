@@ -17,27 +17,10 @@ int main(int argc,char ** argv){
     rm::Geometrie::bezierCurve bc(pc);
 
     double t;
-    bc.distToCurve(cv::Point2d(100,450),t);
 
-    for(int i=0;i<1000000;i++)
-        bc.computePtPoly(0.25);
+//    for(int i=0;i<100000;i++)
+        bc.distToCurve(cv::Point2d(100,450),t);
 
-    std::vector<double> N;
-    N.push_back(0);
-    N.push_back(-2);
-    N.push_back(3);
-    N.push_back(-1);
-    N.push_back(-1);
-    N.push_back(1);
-
-    std::vector<double> D;
-    D.push_back(1);
-    D.push_back(-1);
-    D.push_back(1);
-
-
-    rm::Algebre::Polynome n(N),d(D),q,r;
-    n.divisionPolynomiale(D,q,r);
 
         cv::Mat img(600,500,cv::DataType<cv::Vec3b>::type);
 

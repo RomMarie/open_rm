@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <open_rm/Algebre/polynomes.h>
+#include <open_rm/Intervalles/intervalles.h>
 
 
 namespace rm{

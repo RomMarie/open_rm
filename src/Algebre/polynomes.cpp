@@ -26,7 +26,7 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
     unsigned int dN=N.size()-1;
     unsigned int dD=den.coefs().size()-1;
     dq = dN-dD;
-    dr = dD;
+    dr = dD-1;
     std::vector<double> q(dq+1);
     std::vector<double> r(dr+1);
     if( dN >= dD ) {
@@ -40,9 +40,10 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
             }
             dd = dN;
 
+
             q[dN-dD] = N[dN]/d[dd];
 
-            for( i = 0 ; i < dq + 1 ; i++ ) {
+            for( i = 0 ; i < dd + 1 ; i++ ) {
                 d[i] = d[i] * q[dN-dD];
             }
 
@@ -70,7 +71,6 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
 
     Q.set(q);
     R.set(r);
-
 }
 
 /*!
@@ -81,7 +81,7 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
  * \param step Pas des intervalles considérés
  * \return Vecteur retournant pour chaque intervalle le nombre de racines réelles du polynome s'y trouvant
  */
-std::vector<int> Polynome::sturmSequence(double start, double end, double step)
+std::vector<rm::Intervalles::Intervalle<int> > Polynome::sturmSequence(double start, double end, double step)
 {
     // Construction de la séquence de Sturm
     std::vector<Polynome> S;
@@ -95,9 +95,9 @@ std::vector<int> Polynome::sturmSequence(double start, double end, double step)
     }while(s.coefs().size()>1);
 
     // Evaluation de S pour chaque borne de chaque intervalle (start+n*step)
-    std::vector<std::vector<double> > Ss;
-    for(double i=start;i<end;i+=step){
-        std::vector<double> s_i;
+    std::vector<std::vector<long double> > Ss;
+    for(double i=start;i<=end;i+=step){
+        std::vector<long double> s_i;
         for(unsigned int j=0;j<S.size();j++){
             s_i.push_back(S[j].compute(i));
         }
@@ -114,7 +114,6 @@ std::vector<int> Polynome::sturmSequence(double start, double end, double step)
         }
     }
 
-
     // Calcul du nombre de racines dans chaque intervalle
     std::vector<int> nRacines;
     for(unsigned int i=1;i<nSwap.size();i++){
@@ -124,7 +123,13 @@ std::vector<int> Polynome::sturmSequence(double start, double end, double step)
             nRacines.push_back(0);
     }
 
-    return nRacines;
+    // Mise en forme et envoi du résultat
+    std::vector<rm::Intervalles::Intervalle<int> > res;
+    for(unsigned int i=0;i<nRacines.size();i++){
+        if(nRacines[i]>0)
+            res.push_back(rm::Intervalles::Intervalle<int>(start+i*step,start+(i+1)*step,nRacines[i]));
+    }
+    return res;
 }
 
 /*!

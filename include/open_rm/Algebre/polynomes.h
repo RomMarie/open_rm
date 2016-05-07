@@ -1,6 +1,8 @@
 #ifndef POLYNOMES_H
 #define POLYNOMES_H
 #include <opencv2/opencv.hpp>
+#include <open_rm/Intervalles/intervalles.h>
+
 namespace rm{
 namespace Algebre{
 
@@ -28,7 +30,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Polynome& poly);
 
     void divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R);
-    std::vector<int> sturmSequence(double start,double end, double step);
+    std::vector<rm::Intervalles::Intervalle<int> > sturmSequence(double start,double end, double step);
 
     // Méthodes get/set
     void set(std::vector<double> coefs);
