@@ -5,29 +5,38 @@
 #include <open_rm/Geometrie/bezier.h>
 #include <open_rm/Algebre/polynomes.h>
 
+#include <ctime>
+
 int main(int argc,char ** argv){
 
 
     std::vector<cv::Point2d> pc;
-    pc.push_back(cv::Point2d(100,400));
-    pc.push_back(cv::Point2d(250,150));
-    pc.push_back(cv::Point2d(350,550));
-    pc.push_back(cv::Point2d(250,350));
+    pc.push_back(cv::Point2d(200,400));
+    pc.push_back(cv::Point2d(250,250));
+    pc.push_back(cv::Point2d(350,350));
+    pc.push_back(cv::Point2d(250,450));
 
     rm::Geometrie::bezierCurve bc(pc);
 
     double t;
 
-//    for(int i=0;i<100000;i++)
-        bc.distToCurve(cv::Point2d(100,450),t);
+    cv::Point2d p(120,200);
 
+    clock_t  a=clock();
 
+    for(int i=0;i<100000;i++)
+        bc.distToCurve(p,t);
+      //  std::cout<<bc.distToCurve(p,t)<<std::endl;
+       // std::cout<<t<<std::endl;
+
+    std::cout<<(clock()-a)/100000000.<<std::endl;
         cv::Mat img(600,500,cv::DataType<cv::Vec3b>::type);
 
         cv::Point2d pt(100,400);
 
 
     bc.draw(img,cv::Scalar(0,0,255));
-
+    cv::circle(img,p,3,cv::Scalar(0,255,0));
+    cv::circle(img,bc.computePtPoly(t),3,cv::Scalar(0,255,0));
     cv::imshow("img",img);cv::waitKey();
 }

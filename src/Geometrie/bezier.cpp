@@ -193,10 +193,10 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     // jusqu'à obtenir une racine par intervalle
     bool stop;
     do{
-        for(unsigned int i=0;i<intervalles.size();i++){
+      /*  for(unsigned int i=0;i<intervalles.size();i++){
             std::cout<<intervalles[i]<<std::endl;
         }
-        std::cout<<std::endl;
+        std::cout<<std::endl;*/
         stop=true;
         for(unsigned int i=0;i<intervalles.size();i++){
             if(intervalles[i].data()>1){
@@ -204,7 +204,7 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
                 std::vector<rm::Intervalles::Intervalle<int> > newIntervalles;
                 newIntervalles=g.sturmSequence(intervalles[i].borneInf(),
                                              intervalles[i].borneSup(),
-                                             0.1*(intervalles[i].borneSup()-intervalles[i].borneInf()));
+                                             0.5*(intervalles[i].borneSup()-intervalles[i].borneInf()));
                 for(unsigned int j=0;j<intervalles.size();j++){
                     if(i!=j)
                         newIntervalles.push_back(intervalles[j]);
@@ -219,7 +219,7 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     // à un minimum local de la distance au point
     std::vector<rm::Intervalles::Intervalle<int> > intervallesTmp;
     for(unsigned int i=0;i<intervalles.size();i++){
-        if(g.compute(intervalles[i].borneInf())<0&&g.compute(intervalles[i].borneSup())>0)
+        if(g.compute(intervalles[i].borneInf())>0&&g.compute(intervalles[i].borneSup())<0)
             intervallesTmp.push_back(intervalles[i]);
     }
     intervalles=intervallesTmp;
@@ -230,9 +230,32 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     // Pour l'instant, nous proposons une précision de la solution au centième. A voir si c'est suffisant
     for(unsigned int i=0;i<intervalles.size();i++){
         while(intervalles[i].largeur()>0.01){
-
+            double gMilieu=g.compute(intervalles[i].milieu());
+            if(gMilieu==0){
+                intervalles[i].set(intervalles[i].milieu(),intervalles[i].milieu(),1);
+            }
+            else if(gMilieu>0){
+                intervalles[i].setBorneInf(intervalles[i].milieu());
+            }
+            else{
+                intervalles[i].setBorneSup(intervalles[i].milieu());
+            }
         }
     }
+
+    double bestDist=10000000;
+    int best;
+    for(unsigned int i=0;i<intervalles.size();i++){
+        double dist=cv::norm(pt-computePtPoly(intervalles[i].milieu()));
+        if(dist<bestDist){
+            bestDist=dist;
+            best=i;
+        }
+    }
+
+    t=intervalles[best].milieu();
+    return bestDist;
+
 }
 
 /*!

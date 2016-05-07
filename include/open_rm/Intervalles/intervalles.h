@@ -167,7 +167,7 @@ void Intervalle<T>::setData(const T &data)
 template<class T>
 bool Intervalle<T>::isValid()
 {
-    if(_borneInf<_borneSup)return true;
+    if(_borneInf<=_borneSup)return true;
     else return false;
 }
 
