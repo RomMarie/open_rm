@@ -81,8 +81,6 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
  */
 std::vector<rm::Intervalles::Intervalle<int> > Polynome::sturmSequence(double start, double end, double step)
 {
-    std::vector<rm::Intervalles::Intervalle<int> > res;
-//    res.push_back(rm::Intervalles::Intervalle<int>(0,1));
     // Construction de la séquence de Sturm
     if(_sturmSeq.size()==0){
         _sturmSeq.push_back(*this);
@@ -98,15 +96,17 @@ std::vector<rm::Intervalles::Intervalle<int> > Polynome::sturmSequence(double st
     // Evaluation de S pour chaque borne de chaque intervalle (start+n*step)
 
     int tailleSeq=_sturmSeq.size();
-    std::vector<std::vector<long double> > Ss;
+    int nBornes=floor((end-start)/step+1);
+
+    double Ss[nBornes][tailleSeq];
+
+    int n=0;
     for(double i=start;i<=end;i+=step){
-        std::vector<long double> s_i;
-        for(unsigned int j=0;j<_sturmSeq.size();j++){
-            s_i.push_back(_sturmSeq[j].compute(i));
+        for(unsigned int j=0;j<tailleSeq;j++){
+            Ss[n][j]=_sturmSeq[j].compute(i);
         }
-        Ss.push_back(s_i);
+        n++;
     }
-    int nBornes=Ss.size();
 
     // Calcul du nombre de changement de signe pour chaque borne
     int nSwap[nBornes];
@@ -128,6 +128,7 @@ std::vector<rm::Intervalles::Intervalle<int> > Polynome::sturmSequence(double st
     }
 
     // Mise en forme et envoi du résultat
+    std::vector<rm::Intervalles::Intervalle<int> > res;
     for(unsigned int i=0;i<nBornes-1;i++){
         if(nRacines[i]>0)
             res.push_back(rm::Intervalles::Intervalle<int>(start+i*step,start+(i+1)*step,nRacines[i]));

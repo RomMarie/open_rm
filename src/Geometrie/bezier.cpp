@@ -180,11 +180,8 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
         buildPoly();
 
     // Calcul du polynome g(t)=Poly'(t).(pt-poly(t))
-    std::vector<double> px,py;
-    px.push_back(pt.x);
-    py.push_back(pt.y);
-    rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(px)-_polyX)+_dpolyY*(rm::Algebre::Polynome(py)-_polyY);
- // Sequence de Sturm pour identifier la position des racines
+    rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(&(pt.x),0)-_polyX)+_dpolyY*(rm::Algebre::Polynome(&(pt.y),0)-_polyY);
+    // Sequence de Sturm pour identifier la position des racines
     std::vector<rm::Intervalles::Intervalle<int> > intervalles=g.sturmSequence(0,1,1);
 
     // On vérifie que chaque intervalle contient au plus une racine
@@ -192,10 +189,6 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     // jusqu'à obtenir une racine par intervalle
     bool stop;
     do{
-       /* for(unsigned int i=0;i<intervalles.size();i++){
-            std::cout<<intervalles[i]<<std::endl;
-        }
-        std::cout<<std::endl;*/
         stop=true;
         for(unsigned int i=0;i<intervalles.size();i++){
             if(intervalles[i].data()>1){
@@ -216,6 +209,8 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
 
     // identification des intervalles intéressants (où le zéro de la fonction g correspond effectivement
     // à un minimum local de la distance au point
+    // On s'appuie sur le fait que g(u)=alpha*f'(u), où f(u) est la distance entre le point pt et le point
+    // de la courbe de coordonnées u, avec alpha<0. Donc quand g>0, f'<0 et inversement
     std::vector<rm::Intervalles::Intervalle<int> > intervallesTmp;
     for(unsigned int i=0;i<intervalles.size();i++){
         if(g.compute(intervalles[i].borneInf())>0&&g.compute(intervalles[i].borneSup())<0)
@@ -254,7 +249,6 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
 
     t=intervalles[best].milieu();
     return bestDist;
-// return 0;
 
 }
 
