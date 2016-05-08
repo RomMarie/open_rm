@@ -184,12 +184,7 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     px.push_back(pt.x);
     py.push_back(pt.y);
     rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(px)-_polyX)+_dpolyY*(rm::Algebre::Polynome(py)-_polyY);
-
-    std::cout<<g<<" "<<std::endl;
-    std::cout<<_dpolyX*(rm::Algebre::Polynome(px)-_polyX)<<" "<<std::endl;
-    std::cout<<_dpolyY<<" "<<rm::Algebre::Polynome(py)<<" "<<_polyY<<" "<<std::endl;
-    std::cout<<rm::Algebre::Polynome(py)-_polyY<<" "<<std::endl;
-    // Sequence de Sturm pour identifier la position des racines
+ // Sequence de Sturm pour identifier la position des racines
     std::vector<rm::Intervalles::Intervalle<int> > intervalles=g.sturmSequence(0,1,1);
 
     // On vérifie que chaque intervalle contient au plus une racine
@@ -231,10 +226,9 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     // On sait maintenant que, sur les intervalles qui restent, la fonction g est monotone, et passe par 0
     // On converge donc vers une bonne approximation de la racine en divisant à chaque itération par 2 l'intervalle
     // suivant le signe de la fonction g en son milieu.
-    // Pour l'instant, nous proposons une précision de la solution au centième. A voir si c'est suffisant
     for(unsigned int i=0;i<intervalles.size();i++){
-        while(intervalles[i].largeur()>0.01){
-            double gMilieu=g.compute(intervalles[i].milieu());
+        while(intervalles[i].largeur()>0.00000001){
+            long double gMilieu=g.compute(intervalles[i].milieu());
             if(gMilieu==0){
                 intervalles[i].set(intervalles[i].milieu(),intervalles[i].milieu(),1);
             }
@@ -250,7 +244,6 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     double bestDist=10000000;
     int best;
     for(unsigned int i=0;i<intervalles.size();i++){
-        std::cout<<intervalles[i]<<std::endl;
         double dist=cv::norm(pt-computePtPoly(intervalles[i].milieu()));
         if(dist<bestDist){
             bestDist=dist;

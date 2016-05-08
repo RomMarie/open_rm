@@ -20,8 +20,7 @@ int main(int argc,char ** argv){
 
     double t;
 
-    cv::Point2d p(360,400);
-
+    cv::Point2d p(260,350);
 
     double poly[5];
     poly[0]=1;
@@ -40,9 +39,7 @@ int main(int argc,char ** argv){
     rm::Algebre::Polynome po2((double*)poly2,3);
 
     clock_t  a=clock();
-    //for(int i=0;i<10000;i++)
-       // po.sturmSequence(0,1,1);
-
+    for(int i=0;i<10000;i++)
         bc.distToCurve(p,t);
       //  std::cout<<bc.distToCurve(p,t)<<std::endl;
        // std::cout<<t<<std::endl;
@@ -50,14 +47,10 @@ int main(int argc,char ** argv){
     std::cout<<"Sturm : "<<(clock()-a)/10000000.<<std::endl;
         cv::Mat img(600,500,cv::DataType<cv::Vec3b>::type);
 
-        cv::Point2d pt(100,400);
-
+    std::cout<<t<<std::endl;
 
     bc.draw(img,cv::Scalar(0,0,255));
     cv::circle(img,p,3,cv::Scalar(0,255,0));
-    for(int i=0;i<=10;i++){
-        std::cout<<i/10.<<" -> "<<cv::norm(p-bc.computePt(i/10.))<<std::endl;
-        cv::circle(img,bc.computePt(i/10.),3,cv::Scalar(0,255,0));
-    }
+    cv::circle(img,bc.computePt(t),3,cv::Scalar(0,255,0));
     cv::imshow("img",img);cv::waitKey();
 }
