@@ -15,6 +15,7 @@ public:
     // Constructeurs
     Polynome();
     Polynome(std::vector<double> coefs);
+    Polynome(double* coefs,int degre);
     Polynome(const Polynome& poly);
 
 
@@ -34,9 +35,13 @@ public:
 
     // Méthodes get/set
     void set(std::vector<double> coefs);
+    void set(double* coefs,int degre);
     std::vector<double> coefs() const;
+    void coefs(double* coef, int degre);
+    int degre();
 private:
     std::vector<double> _coefs; ///< Coefficients du polynome (ordre croissant)
+    std::vector<Polynome> _sturmSeq;
 };
 
 }

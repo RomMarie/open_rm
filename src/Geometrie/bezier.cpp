@@ -193,10 +193,10 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     // jusqu'à obtenir une racine par intervalle
     bool stop;
     do{
-      /*  for(unsigned int i=0;i<intervalles.size();i++){
-            std::cout<<intervalles[i]<<std::endl;
-        }
-        std::cout<<std::endl;*/
+//        for(unsigned int i=0;i<intervalles.size();i++){
+//            std::cout<<intervalles[i]<<std::endl;
+//        }
+//        std::cout<<std::endl;
         stop=true;
         for(unsigned int i=0;i<intervalles.size();i++){
             if(intervalles[i].data()>1){
@@ -255,6 +255,7 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
 
     t=intervalles[best].milieu();
     return bestDist;
+// return 0;
 
 }
 

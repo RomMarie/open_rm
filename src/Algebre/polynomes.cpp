@@ -83,23 +83,26 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
  */
 std::vector<rm::Intervalles::Intervalle<int> > Polynome::sturmSequence(double start, double end, double step)
 {
+    std::vector<rm::Intervalles::Intervalle<int> > res;
+//    res.push_back(rm::Intervalles::Intervalle<int>(0,1));
     // Construction de la séquence de Sturm
-    std::vector<Polynome> S;
-    S.push_back(*this);
-    S.push_back(derivate());
-    Polynome s;
-    do{
-        s=S[S.size()-2]%S[S.size()-1];
-        s.invert();
-        S.push_back(s);
-    }while(s.coefs().size()>1);
+    if(_sturmSeq.size()==0){
+        _sturmSeq.push_back(*this);
+        _sturmSeq.push_back(derivate());
+        Polynome s;
+        do{
+            s=_sturmSeq[_sturmSeq.size()-2]%_sturmSeq[_sturmSeq.size()-1];
+            s.invert();
+            _sturmSeq.push_back(s);
+        }while(s.coefs().size()>1);
+    }
 
     // Evaluation de S pour chaque borne de chaque intervalle (start+n*step)
     std::vector<std::vector<long double> > Ss;
     for(double i=start;i<=end;i+=step){
         std::vector<long double> s_i;
-        for(unsigned int j=0;j<S.size();j++){
-            s_i.push_back(S[j].compute(i));
+        for(unsigned int j=0;j<_sturmSeq.size();j++){
+            s_i.push_back(_sturmSeq[j].compute(i));
         }
         Ss.push_back(s_i);
     }
@@ -124,7 +127,6 @@ std::vector<rm::Intervalles::Intervalle<int> > Polynome::sturmSequence(double st
     }
 
     // Mise en forme et envoi du résultat
-    std::vector<rm::Intervalles::Intervalle<int> > res;
     for(unsigned int i=0;i<nRacines.size();i++){
         if(nRacines[i]>0)
             res.push_back(rm::Intervalles::Intervalle<int>(start+i*step,start+(i+1)*step,nRacines[i]));
@@ -147,6 +149,22 @@ Polynome::Polynome()
 Polynome::Polynome(std::vector<double> coefs)
 {
     set(coefs);
+}
+
+/*!
+ * \brief Second contructeur principal (autre format d'entrée)
+ * \param coefs Coefficients du polynome
+ * \param degre Degré du polynome
+ */
+Polynome::Polynome(double *coefs, int degre)
+{
+
+    if(_coefs.size()!=degre+1){
+        _coefs.resize(degre+1);
+    }
+    for(unsigned int i=0;i<_coefs.size();i++){
+        _coefs[i]=coefs[i];
+    }
 }
 
 /*!
@@ -242,28 +260,28 @@ Polynome Polynome::operator+(const Polynome &poly)
 Polynome Polynome::operator-(const Polynome &poly)
 {
     std::vector<double> coefsPoly2=poly.coefs();
-    std::vector<double> coefsRes;
     if(coefsPoly2.size()>_coefs.size()){
+        std::vector<double> coefsRes=coefsPoly2;
         for(unsigned int i=0;i<coefsPoly2.size();i++){
             if(i<_coefs.size()){
-                coefsRes.push_back(-coefsPoly2[i]+_coefs[i]);
+                coefsRes[i]=-coefsPoly2[i]+_coefs[i];
             }
             else{
-                coefsRes.push_back(-coefsPoly2[i]);
+                coefsRes[i]=-coefsPoly2[i];
             }
         }
+        return Polynome(coefsRes);
     }
     else{
+        std::vector<double> coefsRes=_coefs;
         for(unsigned int i=0;i<_coefs.size();i++){
             if(i<coefsPoly2.size()){
-                coefsRes.push_back(-coefsPoly2[i]+_coefs[i]);
-            }
-            else{
-                coefsRes.push_back(_coefs[i]);
+                coefsRes[i]=-coefsPoly2[i]+_coefs[i];
+
             }
         }
+        return Polynome(coefsRes);
     }
-    return Polynome(coefsRes);
 
 }
 
@@ -274,7 +292,10 @@ Polynome Polynome::operator-(const Polynome &poly)
  */
 Polynome Polynome::operator*(const Polynome &poly)
 {
-    std::vector<double> res(poly.coefs().size()+_coefs.size()-1,0.);
+    int dim=poly.coefs().size()+_coefs.size()-1;
+    double res[dim];
+    for(int i=0;i<dim;i++)
+        res[i]=0;
 
     std::vector<double> coefs=poly.coefs();
     for(unsigned int i=0;i<coefs.size();i++){
@@ -282,7 +303,7 @@ Polynome Polynome::operator*(const Polynome &poly)
             res[i+j]+=coefs[i]*_coefs[j];
         }
     }
-    return Polynome(res);
+    return Polynome(res,dim);
 }
 
 /*!
@@ -363,12 +384,50 @@ void Polynome::set(std::vector<double> coefs)
 }
 
 /*!
+ * \brief Attribue de nouveaux coefficients au polynome
+ * \param coefs Coefficients du polynome
+ * \param degre Degré du polynome
+ */
+void Polynome::set(double *coefs, int degre)
+{
+    if(_coefs.size()!=degre+1){
+        _coefs.resize(degre+1);
+    }
+    for(unsigned int i=0;i<_coefs.size();i++){
+        _coefs[i]=coefs[i];
+    }
+}
+
+/*!
  * \brief Accesseur aux coefficients du polynome porté par l'instance
  * \return vecteur de double contenant les coefficients par ordre croissant
  */
 std::vector<double> Polynome::coefs() const
 {
     return _coefs;
+}
+
+/*!
+ * \brief Récupère les coefficients du polynome sous la forme d'un tableau
+ * \param coef Pointeur vers le tableau chargé de récupérer les coefficients
+ * \param degre Degré du polynome (indispensable pour éviter les fuites mémoires)
+ */
+void Polynome::coefs(double *coef, int degre)
+{
+    if(degre!=_coefs.size()-1)return;
+
+    for(unsigned int i=0;i<_coefs.size();i++){
+        coef[i]=_coefs[i];
+    }
+}
+
+/*!
+ * \brief Indique le degré du polynome
+ * \return Degré du polynome
+ */
+int Polynome::degre()
+{
+    return _coefs.size()-1;
 }
 
 }

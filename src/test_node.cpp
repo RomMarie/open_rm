@@ -22,10 +22,20 @@ int main(int argc,char ** argv){
 
     cv::Point2d p(120,200);
 
-    clock_t  a=clock();
 
-    for(int i=0;i<100000;i++)
-        bc.distToCurve(p,t);
+    double poly[5];
+    poly[0]=1;
+    poly[1]=-1;
+    poly[2]=2;
+    poly[3]=-11;
+    poly[4]=1;
+
+    clock_t  a=clock();
+    rm::Algebre::Polynome po((double*)poly,4);
+    for(int i=0;i<1000000;i++)
+        po*po;
+
+        //bc.distToCurve(p,t);
       //  std::cout<<bc.distToCurve(p,t)<<std::endl;
        // std::cout<<t<<std::endl;
 
