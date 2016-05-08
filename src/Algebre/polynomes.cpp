@@ -162,7 +162,7 @@ Polynome::Polynome(double *coefs, int degre)
     if(_coefs.size()!=degre+1){
         _coefs.resize(degre+1);
     }
-    for(unsigned int i=0;i<_coefs.size();i++){
+    for(unsigned int i=0;i<=degre;i++){
         _coefs[i]=coefs[i];
     }
 }
@@ -181,7 +181,8 @@ Polynome::Polynome(const Polynome &poly)
  */
 void Polynome::invert()
 {
-    for(unsigned int i=0;i<_coefs.size();i++){
+    int deg=degre();
+    for(unsigned int i=0;i<=deg;i++){
         _coefs[i]*=-1;
     }
 }

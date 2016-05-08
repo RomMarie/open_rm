@@ -33,15 +33,15 @@ int main(int argc,char ** argv){
     rm::Algebre::Polynome po((double*)poly,4);
 
     clock_t  a=clock();
-    std::cout<<po<<" "<<po.compute(0.5)<<std::endl;
+    //std::cout<<po<<" "<<po.invert()<<std::endl;
     for(int i=0;i<1000000;i++)
-        po.compute(0.5);
+        po.invert();
 
         //bc.distToCurve(p,t);
       //  std::cout<<bc.distToCurve(p,t)<<std::endl;
        // std::cout<<t<<std::endl;
 
-    std::cout<<"compute : "<<(clock()-a)/100000000.<<std::endl;
+    std::cout<<"invert : "<<(clock()-a)/100000000.<<std::endl;
         cv::Mat img(600,500,cv::DataType<cv::Vec3b>::type);
 
         cv::Point2d pt(100,400);
