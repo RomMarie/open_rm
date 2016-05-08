@@ -186,7 +186,7 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(px)-_polyX)+_dpolyY*(rm::Algebre::Polynome(py)-_polyY);
 
     // Sequence de Sturm pour identifier la position des racines
-    std::vector<rm::Intervalles::Intervalle<int> > intervalles=g.sturmSequence(0,1,1);
+    std::vector<rm::Intervalles::Intervalle<int> > intervalles=g.sturmSequence(0,1,.1);
 
     // On vérifie que chaque intervalle contient au plus une racine
     // Sinon, on applique de nouveau la séquence de Sturm pour subdiviser l'intervalle en question
@@ -246,6 +246,7 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     double bestDist=10000000;
     int best;
     for(unsigned int i=0;i<intervalles.size();i++){
+        std::cout<<intervalles[i]<<std::endl;
         double dist=cv::norm(pt-computePtPoly(intervalles[i].milieu()));
         if(dist<bestDist){
             bestDist=dist;

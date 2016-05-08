@@ -20,7 +20,7 @@ int main(int argc,char ** argv){
 
     double t;
 
-    cv::Point2d p(120,200);
+    cv::Point2d p(300,450);
 
 
     double poly[5];
@@ -40,14 +40,14 @@ int main(int argc,char ** argv){
     rm::Algebre::Polynome po2((double*)poly2,3);
 
     clock_t  a=clock();
-    for(int i=0;i<100000;i++)
-        po.sturmSequence(0,1,1);
+    //for(int i=0;i<10000;i++)
+       // po.sturmSequence(0,1,1);
 
-        //bc.distToCurve(p,t);
+        bc.distToCurve(p,t);
       //  std::cout<<bc.distToCurve(p,t)<<std::endl;
        // std::cout<<t<<std::endl;
 
-    std::cout<<"division Polynomiale : "<<(clock()-a)/100000000.<<std::endl;
+    std::cout<<"Sturm : "<<(clock()-a)/10000000.<<std::endl;
         cv::Mat img(600,500,cv::DataType<cv::Vec3b>::type);
 
         cv::Point2d pt(100,400);

@@ -96,6 +96,8 @@ std::vector<rm::Intervalles::Intervalle<int> > Polynome::sturmSequence(double st
     }
 
     // Evaluation de S pour chaque borne de chaque intervalle (start+n*step)
+
+    int tailleSeq=_sturmSeq.size();
     std::vector<std::vector<long double> > Ss;
     for(double i=start;i<=end;i+=step){
         std::vector<long double> s_i;
@@ -104,28 +106,29 @@ std::vector<rm::Intervalles::Intervalle<int> > Polynome::sturmSequence(double st
         }
         Ss.push_back(s_i);
     }
+    int nBornes=Ss.size();
 
     // Calcul du nombre de changement de signe pour chaque borne
-    std::vector<int> nSwap;
-    for(unsigned int i=0;i<Ss.size();i++){
-        nSwap.push_back(0);
-        for(unsigned int j=1;j<Ss[i].size();j++){
+    int nSwap[nBornes];
+    for(unsigned int i=0;i<nBornes;i++){
+        nSwap[i]=0;
+        for(unsigned int j=1;j<tailleSeq;j++){
             if(Ss[i][j-1]/Ss[i][j]<0)
                 nSwap[i]++;
         }
     }
 
     // Calcul du nombre de racines dans chaque intervalle
-    std::vector<int> nRacines;
-    for(unsigned int i=1;i<nSwap.size();i++){
+    int nRacines[nBornes-1];
+    for(unsigned int i=1;i<nBornes;i++){
         if(nSwap[i-1]-nSwap[i]>0)
-            nRacines.push_back(nSwap[i-1]-nSwap[i]);
+            nRacines[i-1]=nSwap[i-1]-nSwap[i];
         else
-            nRacines.push_back(0);
+            nRacines[i-1]=0;
     }
 
     // Mise en forme et envoi du résultat
-    for(unsigned int i=0;i<nRacines.size();i++){
+    for(unsigned int i=0;i<nBornes-1;i++){
         if(nRacines[i]>0)
             res.push_back(rm::Intervalles::Intervalle<int>(start+i*step,start+(i+1)*step,nRacines[i]));
     }
