@@ -257,6 +257,8 @@ Polynome Polynome::operator+(const Polynome &poly)
     for(int i=degRes;i>=0;i--){
         if(coefsRes[i]==0)
             degRes--;
+        else
+            break;
     }
 
     if(degRes==0)return Polynome();
@@ -275,7 +277,7 @@ Polynome Polynome::operator-(const Polynome &poly)
     poly.coefs(coefsPoly2,degPoly2);
 
     int degRes;
-    if(degPoly2+1>_coefs.size()){
+    if(degPoly2>degre()){
         degRes=degPoly2;
     }
     else{
@@ -291,8 +293,11 @@ Polynome Polynome::operator-(const Polynome &poly)
     }
 
     for(int i=degRes;i>=0;i--){
-        if(coefsRes[i]==0)
+        if(coefsRes[i]==0){
             degRes--;
+        }
+        else
+            break; // On retire des éléments jusqu'à avoir un coefficient non nul
     }
 
     if(degRes==0)return Polynome();

@@ -185,18 +185,22 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     py.push_back(pt.y);
     rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(px)-_polyX)+_dpolyY*(rm::Algebre::Polynome(py)-_polyY);
 
+    std::cout<<g<<" "<<std::endl;
+    std::cout<<_dpolyX*(rm::Algebre::Polynome(px)-_polyX)<<" "<<std::endl;
+    std::cout<<_dpolyY<<" "<<rm::Algebre::Polynome(py)<<" "<<_polyY<<" "<<std::endl;
+    std::cout<<rm::Algebre::Polynome(py)-_polyY<<" "<<std::endl;
     // Sequence de Sturm pour identifier la position des racines
-    std::vector<rm::Intervalles::Intervalle<int> > intervalles=g.sturmSequence(0,1,.1);
+    std::vector<rm::Intervalles::Intervalle<int> > intervalles=g.sturmSequence(0,1,1);
 
     // On vérifie que chaque intervalle contient au plus une racine
     // Sinon, on applique de nouveau la séquence de Sturm pour subdiviser l'intervalle en question
     // jusqu'à obtenir une racine par intervalle
     bool stop;
     do{
-//        for(unsigned int i=0;i<intervalles.size();i++){
-//            std::cout<<intervalles[i]<<std::endl;
-//        }
-//        std::cout<<std::endl;
+       /* for(unsigned int i=0;i<intervalles.size();i++){
+            std::cout<<intervalles[i]<<std::endl;
+        }
+        std::cout<<std::endl;*/
         stop=true;
         for(unsigned int i=0;i<intervalles.size();i++){
             if(intervalles[i].data()>1){
@@ -253,6 +257,7 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
             best=i;
         }
     }
+
 
     t=intervalles[best].milieu();
     return bestDist;

@@ -20,7 +20,7 @@ int main(int argc,char ** argv){
 
     double t;
 
-    cv::Point2d p(300,450);
+    cv::Point2d p(360,400);
 
 
     double poly[5];
@@ -55,6 +55,9 @@ int main(int argc,char ** argv){
 
     bc.draw(img,cv::Scalar(0,0,255));
     cv::circle(img,p,3,cv::Scalar(0,255,0));
-    cv::circle(img,bc.computePtPoly(t),3,cv::Scalar(0,255,0));
+    for(int i=0;i<=10;i++){
+        std::cout<<i/10.<<" -> "<<cv::norm(p-bc.computePt(i/10.))<<std::endl;
+        cv::circle(img,bc.computePt(i/10.),3,cv::Scalar(0,255,0));
+    }
     cv::imshow("img",img);cv::waitKey();
 }
