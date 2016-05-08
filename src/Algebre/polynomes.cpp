@@ -194,8 +194,12 @@ void Polynome::invert()
 double Polynome::compute(double x)
 {
     double res=0;
-    for(unsigned int i=0;i<_coefs.size();i++){
-        res+=_coefs[i]*pow(x,i);
+    int deg=degre();
+    for(unsigned int i=0;i<=deg;i++){
+        double power=1;
+        for(int j=0;j<i;j++)
+            power*=x;
+        res+=_coefs[i]*power;
     }
     return res;
 }
