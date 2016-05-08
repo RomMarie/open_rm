@@ -259,30 +259,33 @@ Polynome Polynome::operator+(const Polynome &poly)
  */
 Polynome Polynome::operator-(const Polynome &poly)
 {
-    std::vector<double> coefsPoly2=poly.coefs();
-    if(coefsPoly2.size()>_coefs.size()){
-        std::vector<double> coefsRes=coefsPoly2;
-        for(unsigned int i=0;i<coefsPoly2.size();i++){
-            if(i<_coefs.size()){
-                coefsRes[i]=-coefsPoly2[i]+_coefs[i];
-            }
-            else{
-                coefsRes[i]=-coefsPoly2[i];
-            }
-        }
-        return Polynome(coefsRes);
+    int degPoly2=poly.degre();
+    double coefsPoly2[degPoly2+1];
+    poly.coefs(coefsPoly2,degPoly2);
+
+    int degRes;
+    if(degPoly2+1>_coefs.size()){
+        degRes=degPoly2;
     }
     else{
-        std::vector<double> coefsRes=_coefs;
-        for(unsigned int i=0;i<_coefs.size();i++){
-            if(i<coefsPoly2.size()){
-                coefsRes[i]=-coefsPoly2[i]+_coefs[i];
-
-            }
-        }
-        return Polynome(coefsRes);
+        degRes=degre();
+    }
+    double coefsRes[degRes+1];
+    for(int i=0;i<=degRes;i++){
+        coefsRes[i]=0;
+        if(i<=degPoly2)
+            coefsRes[i]-=coefsPoly2[i];
+        if(i<=degre())
+            coefsRes[i]+=_coefs[i];
     }
 
+    for(int i=degRes;i>=0;i--){
+        if(coefsRes[i]==0)
+            degRes--;
+    }
+
+    if(degRes==0)return Polynome();
+    return Polynome(coefsRes,degRes);
 }
 
 /*!
