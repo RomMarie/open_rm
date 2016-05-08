@@ -206,17 +206,18 @@ double Polynome::compute(double x)
  */
 Polynome Polynome::derivate()
 {
-    std::vector<double> coefs;
-
-    if(_coefs.size()<=1){
-        coefs.push_back(0);
-        return(Polynome(coefs));
+    if(degre()<1){
+        return Polynome();
     }
 
-    for(unsigned int i=1;i<_coefs.size();i++){
-        coefs.push_back(i*_coefs[i]);
+    int degRes=degre()-1;
+    double res[degRes+1];
+
+    for(int i=0;i<=degRes;i++){
+        res[i]=(i+1)*_coefs[i+1];
     }
-    return(Polynome(coefs));
+
+    return(Polynome(res,degRes));
 }
 
 /*!
@@ -300,7 +301,7 @@ Polynome Polynome::operator-(const Polynome &poly)
 Polynome Polynome::operator*(const Polynome &poly)
 {
     int degrePoly2=poly.degre();
-    int dim=degrePoly2+_coefs.size(); // degré1 + degré2 + 1;
+    int dim=degrePoly2+_coefs.size()-1; // degré1 + degré2
     double res[dim];
     for(int i=0;i<dim;i++)
         res[i]=0;
