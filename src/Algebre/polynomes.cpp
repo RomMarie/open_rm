@@ -292,13 +292,15 @@ Polynome Polynome::operator-(const Polynome &poly)
  */
 Polynome Polynome::operator*(const Polynome &poly)
 {
-    int dim=poly.coefs().size()+_coefs.size()-1;
+    int degrePoly2=poly.degre();
+    int dim=degrePoly2+_coefs.size(); // degré1 + degré2 + 1;
     double res[dim];
     for(int i=0;i<dim;i++)
         res[i]=0;
 
-    std::vector<double> coefs=poly.coefs();
-    for(unsigned int i=0;i<coefs.size();i++){
+    double coefs[degrePoly2+1];
+    poly.coefs(coefs,degrePoly2);
+    for(unsigned int i=0;i<=degrePoly2;i++){
         for(unsigned int j=0;j<_coefs.size();j++){
             res[i+j]+=coefs[i]*_coefs[j];
         }
@@ -412,7 +414,7 @@ std::vector<double> Polynome::coefs() const
  * \param coef Pointeur vers le tableau chargé de récupérer les coefficients
  * \param degre Degré du polynome (indispensable pour éviter les fuites mémoires)
  */
-void Polynome::coefs(double *coef, int degre)
+void Polynome::coefs(double *coef, int degre) const
 {
     if(degre!=_coefs.size()-1)return;
 
@@ -425,7 +427,7 @@ void Polynome::coefs(double *coef, int degre)
  * \brief Indique le degré du polynome
  * \return Degré du polynome
  */
-int Polynome::degre()
+int Polynome::degre() const
 {
     return _coefs.size()-1;
 }

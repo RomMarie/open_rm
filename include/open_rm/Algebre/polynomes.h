@@ -37,8 +37,8 @@ public:
     void set(std::vector<double> coefs);
     void set(double* coefs,int degre);
     std::vector<double> coefs() const;
-    void coefs(double* coef, int degre);
-    int degre();
+    void coefs(double* coef, int degre) const;
+    int degre() const;
 private:
     std::vector<double> _coefs; ///< Coefficients du polynome (ordre croissant)
     std::vector<Polynome> _sturmSeq;
