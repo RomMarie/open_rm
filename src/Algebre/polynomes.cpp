@@ -17,60 +17,58 @@ using namespace std;
  */
 void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R)
 {
-    std::vector<double> N=_coefs;
-    std::vector<double> d(N.size());
-
-    int dd, dq, dr;
+    // degrés des différents polynomes utilisés
+    unsigned int dN=degre();
+    unsigned int dD=den.degre();
+    unsigned int dq=dN-dD;
+    unsigned int dr=dD-1;
+    unsigned int dd=dN;
+    // variable de boucle
     int i;
+    // Déclaration des structures utilisées
+    double N[dN+1];
+    double D[dD+1];
+    double q[dq+1];
+    double r[dr+1];
+    double d[dd+1];
+    // Remplissage des tableaux utilisés
+    coefs(N,dN);
+    den.coefs(D,dD);
 
-    unsigned int dN=N.size()-1;
-    unsigned int dD=den.coefs().size()-1;
-    dq = dN-dD;
-    dr = dD-1;
-    std::vector<double> q(dq+1);
-    std::vector<double> r(dr+1);
-    if( dN >= dD ) {
-        while(dN >= dD) {
-            for( i = 0 ; i < dN + 1 ; i++ ) {
-                d[i] = 0;
+    // Déroulement de l'algorihme
+    if(dN>=dD){
+        while(dN>=dD){
+            for(i=0;i<=dN;i++){
+                d[i]=0;
             }
 
-            for( i = 0 ; i < dD + 1 ; i++ ) {
-                d[i+dN-dD] = den.coefs()[i];
+            for(i=0;i<=dD;i++){
+                d[i+dN-dD]=D[i];
             }
             dd = dN;
-
-
             q[dN-dD] = N[dN]/d[dd];
-
-            for( i = 0 ; i < dd + 1 ; i++ ) {
-                d[i] = d[i] * q[dN-dD];
+            for(i=0;i<=dd;i++){
+                d[i]=d[i]*q[dN-dD];
             }
-
-            for( i = 0 ; i < dN + 1 ; i++ ) {
-                N[i] = N[i] - d[i];
+            for(i=0;i<=dN;i++){
+                N[i]=N[i]-d[i];
             }
             dN--;
-
         }
-
     }
 
-
-
-
-    for( i = 0 ; i < dN + 1 ; i++ ) {
-        r[i] = N[i];
+    for(i=0;i<=dN;i++){
+        r[i]=N[i];
     }
 
-    while(q[q.size()-1]==0&&q.size()>0)
-        q.pop_back();
+    while(q[dq]==0&&dq>0)
+        dq--;
 
-    while(r[r.size()-1]==0&&r.size()>0)
-        r.pop_back();
+    while(r[dr]==0&&dr>0)
+        dr--;
 
-    Q.set(q);
-    R.set(r);
+    Q.set(q,dq);
+    R.set(r,dr);
 }
 
 /*!

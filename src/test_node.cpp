@@ -31,17 +31,23 @@ int main(int argc,char ** argv){
     poly[4]=1;
 
     rm::Algebre::Polynome po((double*)poly,4);
+    double poly2[4];
+    poly2[0]=1;
+    poly2[1]=-1;
+    poly2[2]=2;
+    poly2[3]=-1;
+
+    rm::Algebre::Polynome po2((double*)poly2,3);
 
     clock_t  a=clock();
-    //std::cout<<po<<" "<<po.invert()<<std::endl;
-    for(int i=0;i<1000000;i++)
-        po.invert();
+    for(int i=0;i<100000;i++)
+        po.sturmSequence(0,1,1);
 
         //bc.distToCurve(p,t);
       //  std::cout<<bc.distToCurve(p,t)<<std::endl;
        // std::cout<<t<<std::endl;
 
-    std::cout<<"invert : "<<(clock()-a)/100000000.<<std::endl;
+    std::cout<<"division Polynomiale : "<<(clock()-a)/100000000.<<std::endl;
         cv::Mat img(600,500,cv::DataType<cv::Vec3b>::type);
 
         cv::Point2d pt(100,400);
