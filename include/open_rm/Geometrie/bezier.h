@@ -10,15 +10,20 @@ namespace rm{
 namespace Geometrie{
 
 /*!
+ * Namespace gérant la manipulation de courbes de Bézier
+ */
+namespace Bezier{
+
+/*!
  * \brief Classe représentant une courbe de Bézier d'ordre quelconque
  */
-class bezierCurve{
+class Courbe{
 public:
-    bezierCurve();
-    bezierCurve(std::vector<cv::Point2d> ptsControle,bool withPoly=true);
+    Courbe();
+    Courbe(std::vector<cv::Point2d> ptsControle,bool withPoly=true);
     void set(std::vector<cv::Point2d> ptsControle, bool withPoly=true);
     unsigned int degre();
-    bezierCurve split();
+    Courbe split();
     cv::Point2d computePt(double t);
     cv::Point2d computePtPoly(double t);
 
@@ -50,6 +55,9 @@ private:
 
 };
 
+
+std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts,double thres);
+}
 }
 }
 

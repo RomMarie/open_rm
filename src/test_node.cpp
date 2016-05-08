@@ -10,47 +10,27 @@
 int main(int argc,char ** argv){
 
 
-    std::vector<cv::Point2d> pc;
-    pc.push_back(cv::Point2d(200,400));
-    pc.push_back(cv::Point2d(250,250));
-    pc.push_back(cv::Point2d(350,350));
-    pc.push_back(cv::Point2d(250,450));
+    // 11 points pour test échantillonnage squelette
+    std::vector<cv::Point2d> skel;
+    skel.push_back(cv::Point2d(100,100));
+    skel.push_back(cv::Point2d(110,120));
+    skel.push_back(cv::Point2d(130,140));
+    skel.push_back(cv::Point2d(360,160));
+    skel.push_back(cv::Point2d(160,180));
+    skel.push_back(cv::Point2d(150,200));
+    skel.push_back(cv::Point2d(130,220));
+    skel.push_back(cv::Point2d(330,240));
+    skel.push_back(cv::Point2d(140,260));
+    skel.push_back(cv::Point2d(160,280));
+//    skel.push_back(cv::Point2d(190,280));
 
-    rm::Geometrie::bezierCurve bc(pc);
 
-    double t;
+    cv::Mat img(1000,1000,CV_8UC3);
+    rm::Geometrie::Bezier::Courbe bc(skel);
+    bc.draw(img,cv::Scalar(255,0,255));
 
-    cv::Point2d p(260,350);
-
-    double poly[5];
-    poly[0]=1;
-    poly[1]=-1;
-    poly[2]=2;
-    poly[3]=-11;
-    poly[4]=1;
-
-    rm::Algebre::Polynome po((double*)poly,4);
-    double poly2[4];
-    poly2[0]=1;
-    poly2[1]=-1;
-    poly2[2]=2;
-    poly2[3]=-1;
-
-    rm::Algebre::Polynome po2((double*)poly2,3);
-
-    clock_t  a=clock();
-    for(int i=0;i<10000;i++)
-        bc.distToCurve(p,t);
-      //  std::cout<<bc.distToCurve(p,t)<<std::endl;
-       // std::cout<<t<<std::endl;
-
-    std::cout<<"Sturm : "<<(clock()-a)/10000000.<<std::endl;
-        cv::Mat img(600,500,cv::DataType<cv::Vec3b>::type);
-
-    std::cout<<t<<std::endl;
-
-    bc.draw(img,cv::Scalar(0,0,255));
-    cv::circle(img,p,3,cv::Scalar(0,255,0));
-    cv::circle(img,bc.computePt(t),3,cv::Scalar(0,255,0));
     cv::imshow("img",img);cv::waitKey();
+
+
+
 }

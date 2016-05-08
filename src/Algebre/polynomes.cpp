@@ -18,11 +18,11 @@ using namespace std;
 void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R)
 {
     // degrés des différents polynomes utilisés
-    unsigned int dN=degre();
-    unsigned int dD=den.degre();
-    unsigned int dq=dN-dD;
-    unsigned int dr=dD-1;
-    unsigned int dd=dN;
+    int dN=degre();
+    int dD=den.degre();
+    int dq=dN-dD;
+    int dr=dD-1;
+    int dd=dN;
     // variable de boucle
     int i;
     // Déclaration des structures utilisées
@@ -69,6 +69,7 @@ void Polynome::divisionPolynomiale(const Polynome& den, Polynome& Q, Polynome& R
 
     Q.set(q,dq);
     R.set(r,dr);
+
 }
 
 /*!
@@ -88,10 +89,13 @@ std::vector<rm::Intervalles::Intervalle<int> > Polynome::sturmSequence(double st
         Polynome s;
         do{
             s=_sturmSeq[_sturmSeq.size()-2]%_sturmSeq[_sturmSeq.size()-1];
-            s.invert();
-            _sturmSeq.push_back(s);
+            if(s.degre()>=0){
+                s.invert();
+                _sturmSeq.push_back(s);
+            }
         }while(s.coefs().size()>1);
     }
+
 
     // Evaluation de S pour chaque borne de chaque intervalle (start+n*step)
 
@@ -184,7 +188,7 @@ Polynome::Polynome(const Polynome &poly)
 void Polynome::invert()
 {
     int deg=degre();
-    for(unsigned int i=0;i<=deg;i++){
+    for(int i=0;i<=deg;i++){
         _coefs[i]*=-1;
     }
 }

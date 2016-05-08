@@ -3,11 +3,11 @@
 
 namespace rm{
 namespace Geometrie{
-
+namespace Bezier{
 /*!
  * \brief Constructeur par défaut
  */
-bezierCurve::bezierCurve()
+Courbe::Courbe()
 {
     _polyOK=false;
     _withPoly=false;
@@ -18,7 +18,7 @@ bezierCurve::bezierCurve()
  * \param ptsControle points de controle de la courbe de Bézier
  * \param withPoly Indique s'il faut précalculer le polynome définissant la courbe et sa dérivée (oui par défaut)
  */
-bezierCurve::bezierCurve(std::vector<cv::Point2d> ptsControle, bool withPoly)
+Courbe::Courbe(std::vector<cv::Point2d> ptsControle, bool withPoly)
 {
     _pc=ptsControle;
     _polyOK=false;
@@ -32,7 +32,7 @@ bezierCurve::bezierCurve(std::vector<cv::Point2d> ptsControle, bool withPoly)
  * \param ptsControle Vecteur contenant les nouveaux points de controle
  * \param withPoly Indique s'il faut précalculer le polynome définissant la courbe et sa dérivée (oui par défaut)
  */
-void bezierCurve::set(std::vector<cv::Point2d> ptsControle, bool withPoly)
+void Courbe::set(std::vector<cv::Point2d> ptsControle, bool withPoly)
 {
     _pc=ptsControle;
     _polyOK=false;
@@ -45,7 +45,7 @@ void bezierCurve::set(std::vector<cv::Point2d> ptsControle, bool withPoly)
  * \brief Indique le degré de la courbe portée par la structure
  * \return Degré de la courbe de Bézier
  */
-unsigned int bezierCurve::degre()
+unsigned int Courbe::degre()
 {
     return _pc.size()-1;
 }
@@ -58,7 +58,7 @@ unsigned int bezierCurve::degre()
  *
  * \return la courbe de Bézier correspondant à la seconde portion de la courbe initiale
  */
-bezierCurve bezierCurve::split()
+Courbe Courbe::split()
 {
     // La génération de nouveaux points de controle passe par un échantillonnage de la courbe de Bezier
     // (7 points sont nécessaires)
@@ -87,7 +87,7 @@ bezierCurve bezierCurve::split()
 
     _pc=pc1;
 
-    return bezierCurve(pc2);
+    return Courbe(pc2);
 
 }
 
@@ -96,7 +96,7 @@ bezierCurve bezierCurve::split()
  * \param t position du point considéré (entre 0 et 1)
  * \return coordonnées du point appartenant à la courbe
  */
-cv::Point2d bezierCurve::computePt(double t)
+cv::Point2d Courbe::computePt(double t)
 {
     return deCasteljau(_pc,t);
 }
@@ -106,7 +106,7 @@ cv::Point2d bezierCurve::computePt(double t)
  * \param t Position du point considéré (entre 0 et 1)
  * \return Coordonnées du point appartenant à la courbe
  */
-cv::Point2d bezierCurve::computePtPoly(double t)
+cv::Point2d Courbe::computePtPoly(double t)
 {
     return cv::Point2d(_polyX.compute(t),_polyY.compute(t));
 }
@@ -115,7 +115,7 @@ cv::Point2d bezierCurve::computePtPoly(double t)
  * \brief Retourne les points de controle de la courbe
  * \return Vecteur contenant les points de controle de la courbe
  */
-std::vector<cv::Point2d> bezierCurve::pc() const
+std::vector<cv::Point2d> Courbe::pc() const
 {
     return _pc;
 }
@@ -126,7 +126,7 @@ std::vector<cv::Point2d> bezierCurve::pc() const
  * \param color (optionnel) Couleur du dessin
  * \param withPC (optionnel) Indique s'il faut afficher les points de controle (oui par défaut)
  */
-void bezierCurve::draw(cv::Mat &img, cv::Scalar color, bool withPC)
+void Courbe::draw(cv::Mat &img, cv::Scalar color, bool withPC)
 {
     // On commence par vérifier que l'image peut afficher le patch
     std::vector<cv::Point> pts; // La fonction boundingRect de OpenCV n'accepte que des cv::Point
@@ -156,7 +156,7 @@ void bezierCurve::draw(cv::Mat &img, cv::Scalar color, bool withPC)
  * \param dir Vecteur directeur du mouvement
  * \param scale Amplitude du mouvement
  */
-void bezierCurve::movePtCtrl(int ind, cv::Point2d dir, double scale)
+void Courbe::movePtCtrl(int ind, cv::Point2d dir, double scale)
 {
     if(_pc.size()>ind){ // Si le point de controle existe
         _pc[ind]+=dir*scale; // On le déplace
@@ -173,7 +173,7 @@ void bezierCurve::movePtCtrl(int ind, cv::Point2d dir, double scale)
  * \param t Indice du point de la courbe qui minimise cette distance
  * \return distance euclidienne entre le point et la courbe
  */
-double bezierCurve::distToCurve(cv::Point2d pt,double& t)
+double Courbe::distToCurve(cv::Point2d pt,double& t)
 {
     // Calcul des polynomes définissant la courbe si pas encore fait
     if(!_polyOK)
@@ -182,6 +182,7 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
     // Calcul du polynome g(t)=Poly'(t).(pt-poly(t))
     rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(&(pt.x),0)-_polyX)+_dpolyY*(rm::Algebre::Polynome(&(pt.y),0)-_polyY);
     // Sequence de Sturm pour identifier la position des racines
+
     std::vector<rm::Intervalles::Intervalle<int> > intervalles=g.sturmSequence(0,1,1);
 
     // On vérifie que chaque intervalle contient au plus une racine
@@ -255,7 +256,7 @@ double bezierCurve::distToCurve(cv::Point2d pt,double& t)
 /*!
  * \brief Exprime la courbe de Bézier sous forme d'un polynome
  */
-void bezierCurve::buildPoly()
+void Courbe::buildPoly()
 {
     std::vector<double> pcX,pcY;
     for(unsigned int i=0;i<_pc.size();i++){
@@ -280,7 +281,7 @@ void bezierCurve::buildPoly()
  * \param pc points de controle considérés à une itération donnée
  * \return Polynome à une itération donnée
  */
-Algebre::Polynome bezierCurve::deCasteljauPoly(std::vector<double> Pc)
+Algebre::Polynome Courbe::deCasteljauPoly(std::vector<double> Pc)
 {
     std::vector<double> res;
     if(Pc.size()==1){
@@ -309,7 +310,7 @@ Algebre::Polynome bezierCurve::deCasteljauPoly(std::vector<double> Pc)
  * \param t position du point recherché sur la courbe (entre 0 et 1)
  * \return coordonnées du point recherché
  */
-cv::Point2d bezierCurve::deCasteljau(std::vector<cv::Point2d> Pc, float t)
+cv::Point2d Courbe::deCasteljau(std::vector<cv::Point2d> Pc, float t)
 {
     // Si un seul point de controle, la récursivité s'achève
     if(Pc.size()==1)
@@ -323,6 +324,51 @@ cv::Point2d bezierCurve::deCasteljau(std::vector<cv::Point2d> Pc, float t)
     return (1-t)*deCasteljau(v1,t)+t*deCasteljau(v2,t);
 }
 
+/*!
+ * \brief Approxime un nuage de points par un ensemble de courbes de Bézier cubique
+ *
+ * Les courbes générées vérifient une contrainte de connectivité G1
+ * \param pts Nuage de points à approximer (le premier et le dernier sont les extrémités de la courbe)
+ * \param thres Distance maximale entre un point et la courbe
+ * \return Vecteur de courbes de bézier définissant la courbe totale
+ */
+std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
+{
+    // Chord-length method pour la première estimation de la courbe
+    double lCordes[pts.size()-1];
+    double som=0;
+    for(unsigned int i=0;i<pts.size()-1;i++){
+        lCordes[i]=cv::norm(pts[i]-pts[i+1]);
+        som+=lCordes[i];
+    }
+    double t[pts.size()];
+    t[0]=0;
+    for(unsigned int i=1;i<pts.size()-1;i++){
+        t[i]=t[i-1]+lCordes[i]/som;
+    }
+    t[pts.size()-1]=1;
 
+    // Calcul des tangentes au premier et dernier points
+    cv::Point2d tanDeb;
+    tanDeb.x=(pts[1].x-pts[0].x)/cv::norm(pts[1]-pts[0]);
+    tanDeb.y=(pts[1].y-pts[0].y)/cv::norm(pts[1]-pts[0]);
+    cv::Point2d tanFin;
+    tanFin.x=(pts[pts.size()-1].x-pts[pts.size()-2].x)/cv::norm(pts[pts.size()-1]-pts[pts.size()-2]);
+    tanFin.y=(pts[pts.size()-1].y-pts[pts.size()-2].y)/cv::norm(pts[pts.size()-1]-pts[pts.size()-2]);
+
+    // Les quatre points de controle P0,P1,P2,P3 de la courbe de Bézier sont définis par:
+    // P0=pts[0]
+    // P1=pts[0]+alpha1*tanDeb
+    // P2=pts[pts.size()-1]+alpha2*tanFin
+    // P3=pts(pts.size()-1]
+    // Calcul de alpha1, alpha2 pour minimiser l'erreur quadratique moyenne
+    cv::Mat C(2,2,cv::DataType<double>::type);
+
+
+
+
+}
+
+}
 }
 }
