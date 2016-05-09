@@ -266,7 +266,7 @@ Polynome Polynome::operator+(const Polynome &poly)
             break;
     }
 
-    if(degRes==0)return Polynome();
+    if(degRes==-1)return Polynome();
     return Polynome(coefsRes,degRes);
 }
 
@@ -305,7 +305,7 @@ Polynome Polynome::operator-(const Polynome &poly)
             break; // On retire des éléments jusqu'à avoir un coefficient non nul
     }
 
-    if(degRes==0)return Polynome();
+    if(degRes==-1)return Polynome();
     return Polynome(coefsRes,degRes);
 }
 

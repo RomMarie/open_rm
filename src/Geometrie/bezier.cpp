@@ -1,5 +1,6 @@
 #include <open_rm/Geometrie/bezier.h>
 #include <open_rm/Algebre/equations.h>
+#include <open_rm/Geometrie/distances.h>
 
 namespace rm{
 namespace Geometrie{
@@ -25,6 +26,7 @@ Courbe::Courbe(std::vector<cv::Point2d> ptsControle, bool withPoly)
     _withPoly=withPoly;
     if(withPoly)
         buildPoly();
+
 }
 
 /*!
@@ -196,8 +198,8 @@ double Courbe::distToCurve(cv::Point2d pt,double& t)
                 stop=false;
                 std::vector<rm::Intervalles::Intervalle<int> > newIntervalles;
                 newIntervalles=g.sturmSequence(intervalles[i].borneInf(),
-                                             intervalles[i].borneSup(),
-                                             0.5*(intervalles[i].borneSup()-intervalles[i].borneInf()));
+                                               intervalles[i].borneSup(),
+                                               0.5*(intervalles[i].borneSup()-intervalles[i].borneInf()));
                 for(unsigned int j=0;j<intervalles.size();j++){
                     if(i!=j)
                         newIntervalles.push_back(intervalles[j]);
@@ -254,6 +256,22 @@ double Courbe::distToCurve(cv::Point2d pt,double& t)
 }
 
 /*!
+ * \brief Met à disposition le polynome suivant X définissant la ocurbe
+ * \return Polynome suivant x
+ */
+Algebre::Polynome Courbe::polyX(){
+    return _polyX;
+}
+
+/*!
+ * \brief Met à disposition le polynome suivant Y définissant la ocurbe
+ * \return Polynome suivant y
+ */
+Algebre::Polynome Courbe::polyY(){
+    return _polyY;
+}
+
+/*!
  * \brief Exprime la courbe de Bézier sous forme d'un polynome
  */
 void Courbe::buildPoly()
@@ -263,6 +281,7 @@ void Courbe::buildPoly()
         pcX.push_back(_pc[i].x);
         pcY.push_back(_pc[i].y);
     }
+
 
     _polyX=deCasteljauPoly(pcX);
     _polyY=deCasteljauPoly(pcY);
@@ -328,6 +347,7 @@ cv::Point2d Courbe::deCasteljau(std::vector<cv::Point2d> Pc, float t)
  * \brief Approxime un nuage de points par un ensemble de courbes de Bézier cubique
  *
  * Les courbes générées vérifient une contrainte de connectivité G1
+ * \note fortement inspiré de Philip J. Schneider's "Algorithm for Automatically Fitting Digitized Curves" from the book "Graphics Gems"
  * \param pts Nuage de points à approximer (le premier et le dernier sont les extrémités de la courbe)
  * \param thres Distance maximale entre un point et la courbe
  * \return Vecteur de courbes de bézier définissant la courbe totale
@@ -348,23 +368,152 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
     }
     t[pts.size()-1]=1;
 
+    std::vector<Courbe> res;
+    Courbe curve;
+
+    std::vector<cv::Point2d> pc(4);
+    int furtherPt;
+    double longestDist=0;
+
     // Calcul des tangentes au premier et dernier points
+    cv::Point2d proj;
+    rm::Geometrie::Distances::pointToSegment2D(pts[1],pts[0],pts[2],proj);
+    cv::Point2d dir=2*pts[1]-proj;
     cv::Point2d tanDeb;
-    tanDeb.x=(pts[1].x-pts[0].x)/cv::norm(pts[1]-pts[0]);
-    tanDeb.y=(pts[1].y-pts[0].y)/cv::norm(pts[1]-pts[0]);
+    tanDeb.x=(dir.x-pts[0].x)/cv::norm(dir-pts[0]);
+    tanDeb.y=(dir.y-pts[0].y)/cv::norm(dir-pts[0]);
     cv::Point2d tanFin;
-    tanFin.x=(pts[pts.size()-1].x-pts[pts.size()-2].x)/cv::norm(pts[pts.size()-1]-pts[pts.size()-2]);
-    tanFin.y=(pts[pts.size()-1].y-pts[pts.size()-2].y)/cv::norm(pts[pts.size()-1]-pts[pts.size()-2]);
+    rm::Geometrie::Distances::pointToSegment2D(pts[pts.size()-2],pts[pts.size()-1],pts[pts.size()-3],proj);
+    dir=2*pts[pts.size()-2]-proj;
+    tanFin.x=(pts[pts.size()-1].x-dir.x)/cv::norm(pts[pts.size()-1]-dir);
+    tanFin.y=(pts[pts.size()-1].y-dir.y)/cv::norm(pts[pts.size()-1]-dir);
 
-    // Les quatre points de controle P0,P1,P2,P3 de la courbe de Bézier sont définis par:
-    // P0=pts[0]
-    // P1=pts[0]+alpha1*tanDeb
-    // P2=pts[pts.size()-1]+alpha2*tanFin
-    // P3=pts(pts.size()-1]
-    // Calcul de alpha1, alpha2 pour minimiser l'erreur quadratique moyenne
-    cv::Mat C(2,2,cv::DataType<double>::type);
+    for(int moveTan=0;moveTan<5;moveTan++){
+
+        for(int moveT=0;moveT<3;moveT++){
+
+            // Les quatre points de controle P0,P1,P2,P3 de la courbe de Bézier sont définis par:
+            // P0=pts[0]
+            // P1=pts[0]+alpha1*tanDeb
+            // P2=pts[pts.size()-1]+alpha2*tanFin
+            // P3=pts(pts.size()-1]
+            // Calcul d alpha1, alpha2 pour minimiser l'erreur quadratique moyenne
+            double x1=0,x2=0,c11=0,c12=0,c21=0,c22=0;
 
 
+            pc[0]=pts[0];
+            pc[3]=pts[pts.size()-1];
+            for (int i = 0; i < pts.size(); i++) {
+                cv::Point2d v1=tanDeb*3*t[i]*(1-t[i])*(1-t[i]);
+                cv::Point2d v2=tanFin*3*t[i]*t[i]*(1-t[i]);
+                c11+=v1.x*v1.x+v1.y*v1.y;
+                c22+=v2.x*v2.x+v2.y*v2.y;
+                c12+=v1.x*v2.x+v1.y*v2.y;
+
+                cv::Point2d tmp=pts[i]-(pc[0]*(1.-t[i])*(1.-t[i])*(1.-t[i])+
+                        pc[0]*3*(1.-t[i])*(1.-t[i])*t[i]+
+                        pc[3]*3*(1.-t[i])*t[i]*t[i]+
+                        pc[3]*t[i]*t[i]*t[i]);
+
+                x1+=v1.x*tmp.x+v1.y*tmp.y;
+                x2+=v2.x*tmp.x+v2.y*tmp.y;
+            }
+            c21=c12;
+
+
+            double det_c1_c2=c11*c22-c12*c21;
+            double det_c1_x=c11*x2-c12*x1;
+            double det_x_c2=x1*c21-x2*c22;
+            double alpha1,alpha2;
+            if(det_c1_c2==0){
+                alpha1=0;
+                alpha2=0;
+            }
+            else{
+                alpha1=det_x_c2/det_c1_c2;
+                alpha2=det_c1_x/det_c1_c2;
+            }
+
+
+            // Calcul des points de controle de la courbe
+
+            // Si l'un des alpha est négatif ou nul, on définit la courbe comme un segment
+            // Et on botte en touche jusqu'à la prochaine subdivision
+            if (0){//alpha1 <=0 || alpha2 <=0){
+                double dist = cv::norm(pc[0]-pc[3]) / 3.0;
+                pc[1]=pc[0]+tanDeb*dist;
+                pc[2]=pc[3]+tanFin*dist;
+            }
+            else{
+                pc[1]=pc[0]+tanDeb*alpha1;
+                pc[2]=pc[3]+tanFin*alpha2;
+            }
+
+            curve.set(pc);
+
+
+            // Calcul des nouvelles valeurs de t pour l'itération suivante
+            // Définie en fonction de la projection de chaque point sur la courbe produite
+            longestDist=0;
+            for(unsigned int i=1;i<pts.size()-1;i++){
+                //double t;
+                double dist=curve.distToCurve(pts[i],t[i]);
+                if(dist>longestDist){
+                    longestDist=dist;
+                    furtherPt=i;
+                }
+            }
+/*
+            cv::Mat img(500,500,CV_8UC3);
+            for(int i=0;i<pts.size();i++){
+                cv::line(img,pts[i],curve.computePtPoly(t[i]),cv::Scalar(0,255,0));
+                cv::circle(img,pts[i],3,cv::Scalar(255,0,0));
+            }
+            cv::circle(img,pts[furtherPt],3,cv::Scalar(0,0,255));
+            curve.draw(img,cv::Scalar(255,255,255));
+            cv::imshow("img",img);cv::waitKey();*/
+        }
+        // On bouge une des deux tangentes si un point est trop loin
+        if(longestDist>thres){
+            if(t[furtherPt]<=0.5){
+
+                cv::Point2d ptCurve=curve.computePtPoly(t[furtherPt]);
+                cv::Point2d vecDir=pts[furtherPt]-ptCurve;
+                cv::Point2d newPc;
+                cv::Point2d proj,proj2;
+                double dist=rm::Geometrie::Distances::pointToSegment2D(pts[furtherPt],pc[0],pc[1],proj);
+
+                vecDir=pts[furtherPt]-curve.computePt(t[furtherPt]);
+                pc[1]+=vecDir;
+                tanDeb=pc[1]-pc[0];
+                tanDeb.x/=cv::norm(tanDeb);
+                tanDeb.y/=cv::norm(tanDeb);
+
+            }
+            else{
+                cv::Point2d ptCurve=curve.computePtPoly(t[furtherPt]);
+                cv::Point2d vecDir=pts[furtherPt]-ptCurve;
+                cv::Point2d newPc;
+                cv::Point2d proj;
+
+                //rm::Geometrie::Distances::pointToSegment2D(pts[furtherPt],pc[2],pc[3],proj);
+
+                vecDir=pts[furtherPt]-curve.computePt(t[furtherPt]);
+                pc[2]+=vecDir;
+                tanFin=pc[3]-pc[2];
+                tanFin.x/=cv::norm(tanFin);
+                tanFin.y/=cv::norm(tanFin);
+
+            }
+        }
+    }
+
+
+
+
+    res.push_back(curve);
+
+    return res;
 
 
 }

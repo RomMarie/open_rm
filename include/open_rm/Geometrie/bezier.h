@@ -33,6 +33,8 @@ public:
     void movePtCtrl(int ind, cv::Point2d dir, double scale);
     double distToCurve(cv::Point2d pt, double &t);
 
+    rm::Algebre::Polynome polyX();
+    rm::Algebre::Polynome polyY();
 
 
 private:

@@ -17,7 +17,9 @@ add_library(vision include/open_rm/Vision/calibrage.h src/Vision/calibrage.cpp)
 target_link_libraries(vision ${OpenCV_LIBRARIES})
 add_library(intervalles include/open_rm/Intervalles/intervalles.h src/Intervalles/intervalles.cpp)
 target_link_libraries(intervalles ${OpenCV_LIBRARIES})
-add_library(geometrie include/open_rm/Geometrie/bezier.h src/Geometrie/bezier.cpp)
+add_library(geometrie
+include/open_rm/Geometrie/distances.h src/Geometrie/distances.cpp
+include/open_rm/Geometrie/bezier.h src/Geometrie/bezier.cpp)
 target_link_libraries(geometrie intervalles ${OpenCV_LIBRARIES})
 add_library(algebre
 include/open_rm/Algebre/polynomes.h src/Algebre/polynomes.cpp
