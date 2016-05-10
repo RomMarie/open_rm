@@ -61,7 +61,6 @@ private:
 
 };
 
-
 std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts,double thres);
 }
 }

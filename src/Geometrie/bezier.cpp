@@ -382,6 +382,10 @@ cv::Point2d Courbe::deCasteljau(std::vector<cv::Point2d> Pc, float t)
  */
 std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
 {
+
+    std::vector<Courbe> res;
+    Courbe curve;
+
     // Chord-length method pour la première estimation de la courbe
     double lCordes[pts.size()-1];
     double som=0;
@@ -396,10 +400,134 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
     }
     t[pts.size()-1]=1;
 
-    std::vector<Courbe> res;
-    Courbe curve;
+    struct Bernstein{
+        double compute(int i,double t){
+            switch(i){
+            case 0:return (1-t)*(1-t)*(1-t);break;
+            case 1:return 3*t*(1-t)*(1-t);break;
+            case 2:return 3*t*t*(1-t);break;
+            case 3:return t*t*t;break;
+            default:return 0;
+            }
+        }
+    };
+    Bernstein bernstein;
+
+    double theta1,theta2;
+
+    // Calcul des tangentes au premier et dernier points
+    cv::Point2d proj;
+    rm::Geometrie::Distances::pointToSegment2D(pts[1],pts[0],pts[2],proj);
+    cv::Point2d dir=2*pts[1]-proj;
+    cv::Point2d tanDeb;
+    tanDeb.x=(dir.x-pts[0].x)/cv::norm(dir-pts[0]);
+    tanDeb.y=(dir.y-pts[0].y)/cv::norm(dir-pts[0]);
+    theta1=atan2(tanDeb.y,tanDeb.x);
+    cv::Point2d tanFin;
+    rm::Geometrie::Distances::pointToSegment2D(pts[pts.size()-2],pts[pts.size()-1],pts[pts.size()-3],proj);
+    dir=2*pts[pts.size()-2]-proj;
+    tanFin.x=(pts[pts.size()-1].x-dir.x)/cv::norm(pts[pts.size()-1]-dir);
+    tanFin.y=(pts[pts.size()-1].y-dir.y)/cv::norm(pts[pts.size()-1]-dir);
+    theta2=atan2(tanFin.y,tanFin.x);
+
+    double S=0,S1m=0,S1p=0,S2m=0,S2p=0;
+    double theta1m=theta1-0.00001;
+    double theta1p=theta1+0.00001;
+    double theta2m=theta2-0.00001;
+    double theta2p=theta2+0.00001;
+
+    double t1xt1=tanDeb.x*tanDeb.x+tanDeb.y*tanDeb.y;
+    double t2xt2=tanFin.x*tanFin.x+tanFin.y*tanFin.y;
+    double t1xt2=tanDeb.x*tanFin.x+tanDeb.y*tanFin.y;
+    double B0,B1,B2,B3;
+
+    double I1=0,I2=0,II1=0,II2=0,III1=0,III2=0;
+
+    cv::Point2d D1,D2;
 
     std::vector<cv::Point2d> pc(4);
+    pc[0]=pts[0];
+    pc[3]=pts[pts.size()-1];
+
+
+
+    for(int iter=0;iter<50;iter++){
+        I1=0;I2=0;II1=0;II2=0;III1=0;III2=0;
+        D1=cv::Point2d(0,0);
+        D2=cv::Point2d(0,0);
+        for(int i=0;i<pts.size();i++){
+            B0=bernstein.compute(0,t[i]);
+            B1=bernstein.compute(1,t[i]);
+            B2=bernstein.compute(2,t[i]);
+            B3=bernstein.compute(3,t[i]);
+
+            I1+=B1*B1;
+            II2+=B2*B2;
+            II1+=B1*B2;
+
+            D1+=B1*(pts[i]-pc[0]*(B0+B1)-pc[3]*(B2+B3));
+            D2+=B2*(pts[i]-pc[0]*(B0+B1)-pc[3]*(B2+B3));
+
+        }
+        II1*=cos(theta1-theta2);
+        I2=II1;
+        III1=cos(theta1)*D1.x+sin(theta1)*D1.y;
+        III2=cos(theta2)*D2.x+sin(theta2)*D2.y;
+
+        double alpha1=(III1*II2-III2*II1)/(I1*II2-I2*II1);
+        double alpha2=(I1*III2-I2*III1)/(I1*II2-I2*II1);
+
+        pc[1]=pc[0]+tanDeb*alpha1;
+        pc[2]=pc[3]+tanFin*alpha2;
+
+        curve.set(pc,false);
+/*
+        // Newton Rhapson
+
+        double last_t[pts.size()];
+        double somLast=0;
+        double somNext=0;
+        for(int i=0;i<pts.size();i++){
+
+            cv::Point2d f=curve.computePtPoly(t[i]);
+            cv::Point2d fPrime=curve.computePtPrime(t[i]);
+            cv::Point2d fPrimePrime=curve.computePtPrimePrime(t[i]);
+
+            cv::Point2d d=f-pts[i];
+
+            somLast+=cv::norm(d);
+            double numerator=d.x*fPrime.x+d.y*fPrime.y;
+            double denomi=fPrime.x*fPrime.x+fPrime.y*fPrime.y+d.x*fPrimePrime.x+d.y*fPrimePrime.y;
+            last_t[i]=t[i];
+            if(denomi!=0)
+                t[i]-=numerator/denomi;
+
+            cv::Point2d fNext=curve.computePtPoly(t[i]);
+            somNext+=cv::norm(fNext-pts[i]);
+
+        }
+
+        if(somNext>somLast){
+            for(int i=0;i<pts.size();i++){
+                t[i]=last_t[i];
+            }
+            break;
+        }
+        else if(somLast/somNext<1.01)
+            break;
+
+/*
+        cv::Mat img(500,500,CV_8UC3);
+        for(int i=0;i<pts.size();i++){
+            cv::line(img,pts[i],curve.computePtPoly(t[i]),cv::Scalar(0,255,0));
+            cv::circle(img,pts[i],3,cv::Scalar(255,0,0));
+        }
+        //            cv::circle(img,pts[furtherPt],3,cv::Scalar(0,0,255));
+        curve.draw(img,cv::Scalar(255,255,255));
+        cv::imshow("img",img);cv::waitKey();*/
+
+    }
+    /*
     int furtherPt;
     double longestDist=0;
 
@@ -500,19 +628,6 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
                     t[i]-=numerator/denomi;
 
             }
-        /*
-            // Calcul des nouvelles valeurs de t pour l'itération suivante
-            // Définie en fonction de la projection de chaque point sur la courbe produite
-            longestDist=0;
-            for(unsigned int i=1;i<pts.size()-1;i++){
-                //double t;
-                double dist=curve.distToCurve(pts[i],t[i]);
-                if(dist>longestDist){
-                    longestDist=dist;
-                    furtherPt=i;
-                }
-            }*/
-
            cv::Mat img(500,500,CV_8UC3);
             for(int i=0;i<pts.size();i++){
                 cv::line(img,pts[i],curve.computePtPoly(t[i]),cv::Scalar(0,255,0));
@@ -576,7 +691,7 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
     }
 
 
-
+*/
 
     res.push_back(curve);
 
