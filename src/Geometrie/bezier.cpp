@@ -114,6 +114,32 @@ cv::Point2d Courbe::computePtPoly(double t)
 }
 
 /*!
+ * \brief Détermine la dérivée d'un point de la courbe en utilisant son expression polynomiale
+ * \param t Position du point considéré (entre 0 et 1)
+ * \return Vecteur tangent à la courbe en \a t
+ */
+cv::Point2d Courbe::computePtPrime(double t)
+{
+    cv::Point2d res;
+    res.x=_dpolyX.compute(t);
+    res.y=_dpolyY.compute(t);
+    return res;
+}
+
+/*!
+ * \brief Détermine la dérivée seconde d'un point de la courbe en utilisant son expression polynomiale
+ * \param t Position du point considéré (entre 0 et 1)
+ * \return Dérivée seconde en \a t
+ */
+cv::Point2d Courbe::computePtPrimePrime(double t)
+{
+    cv::Point2d res;
+    res.x=_ddpolyX.compute(t);
+    res.y=_ddpolyY.compute(t);
+    return res;
+}
+
+/*!
  * \brief Retourne les points de controle de la courbe
  * \return Vecteur contenant les points de controle de la courbe
  */
@@ -287,6 +313,8 @@ void Courbe::buildPoly()
     _polyY=deCasteljauPoly(pcY);
     _dpolyX=_polyX.derivate();
     _dpolyY=_polyY.derivate();
+    _ddpolyX=_dpolyX.derivate();
+    _ddpolyY=_dpolyY.derivate();
 
     _withPoly=true;
     _polyOK=true;
@@ -388,6 +416,9 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
     tanFin.x=(pts[pts.size()-1].x-dir.x)/cv::norm(pts[pts.size()-1]-dir);
     tanFin.y=(pts[pts.size()-1].y-dir.y)/cv::norm(pts[pts.size()-1]-dir);
 
+
+    double scale=1;
+
     for(int moveTan=0;moveTan<5;moveTan++){
 
         for(int moveT=0;moveT<3;moveT++){
@@ -451,7 +482,25 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
 
             curve.set(pc);
 
+            // Newton Rhapson
+            for(int i=0;i<pts.size();i++){
 
+                cv::Point2d f=curve.computePtPoly(t[i]);
+                cv::Point2d fPrime=curve.computePtPrime(t[i]);
+                cv::Point2d fPrimePrime=curve.computePtPrimePrime(t[i]);
+
+                cv::Point2d d=f-pts[i];
+
+//                std::cout<<f<<" "<<fPrime<<" "<<fPrimePrime<<" "<<d<<std::endl;
+
+                double numerator=d.x*fPrime.x+d.y*fPrime.y;
+                double denomi=fPrime.x*fPrime.x+fPrime.y*fPrime.y+d.x*fPrimePrime.x+d.y*fPrimePrime.y;
+
+                if(denomi!=0)
+                    t[i]-=numerator/denomi;
+
+            }
+        /*
             // Calcul des nouvelles valeurs de t pour l'itération suivante
             // Définie en fonction de la projection de chaque point sur la courbe produite
             longestDist=0;
@@ -462,18 +511,28 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
                     longestDist=dist;
                     furtherPt=i;
                 }
-            }
-/*
-            cv::Mat img(500,500,CV_8UC3);
+            }*/
+
+           cv::Mat img(500,500,CV_8UC3);
             for(int i=0;i<pts.size();i++){
                 cv::line(img,pts[i],curve.computePtPoly(t[i]),cv::Scalar(0,255,0));
                 cv::circle(img,pts[i],3,cv::Scalar(255,0,0));
             }
-            cv::circle(img,pts[furtherPt],3,cv::Scalar(0,0,255));
+//            cv::circle(img,pts[furtherPt],3,cv::Scalar(0,0,255));
             curve.draw(img,cv::Scalar(255,255,255));
-            cv::imshow("img",img);cv::waitKey();*/
+            cv::imshow("img",img);cv::waitKey();
         }
         // On bouge une des deux tangentes si un point est trop loin
+        longestDist=0;
+
+        for(unsigned int i=1;i<pts.size()-1;i++){
+            //double t;
+            double dist=curve.distToCurve(pts[i],t[i]);
+            if(dist>longestDist){
+                longestDist=dist;
+                furtherPt=i;
+            }
+        }
         if(longestDist>thres){
             if(t[furtherPt]<=0.5){
 
@@ -484,10 +543,14 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
                 double dist=rm::Geometrie::Distances::pointToSegment2D(pts[furtherPt],pc[0],pc[1],proj);
 
                 vecDir=pts[furtherPt]-curve.computePt(t[furtherPt]);
-                pc[1]+=vecDir;
+                pc[1]+=0.5*vecDir;
+                pc[2]+=0.5*vecDir;
                 tanDeb=pc[1]-pc[0];
                 tanDeb.x/=cv::norm(tanDeb);
                 tanDeb.y/=cv::norm(tanDeb);
+                tanFin=pc[3]-pc[2];
+                tanFin.x/=cv::norm(tanFin);
+                tanFin.y/=cv::norm(tanFin);
 
             }
             else{
@@ -499,7 +562,11 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
                 //rm::Geometrie::Distances::pointToSegment2D(pts[furtherPt],pc[2],pc[3],proj);
 
                 vecDir=pts[furtherPt]-curve.computePt(t[furtherPt]);
-                pc[2]+=vecDir;
+                pc[1]+=.5*vecDir;
+                pc[2]+=.5*vecDir;
+                tanDeb=pc[1]-pc[0];
+                tanDeb.x/=cv::norm(tanDeb);
+                tanDeb.y/=cv::norm(tanDeb);
                 tanFin=pc[3]-pc[2];
                 tanFin.x/=cv::norm(tanFin);
                 tanFin.y/=cv::norm(tanFin);

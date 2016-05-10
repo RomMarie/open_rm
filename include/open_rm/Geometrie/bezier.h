@@ -26,6 +26,8 @@ public:
     Courbe split();
     cv::Point2d computePt(double t);
     cv::Point2d computePtPoly(double t);
+    cv::Point2d computePtPrime(double t);
+    cv::Point2d computePtPrimePrime(double t);
 
     std::vector<cv::Point2d> pc() const;
 
@@ -46,6 +48,8 @@ private:
     rm::Algebre::Polynome _polyY; ///< Polynome décrivant la coordonnée y de tout point de la courbe
     rm::Algebre::Polynome _dpolyX; ///< Polynome décrivant la variation de la coordonnée x en tout point de la courbe
     rm::Algebre::Polynome _dpolyY; ///< Polynome décrivant la variation de la coordonnée y en tout point de la courbe
+    rm::Algebre::Polynome _ddpolyX; ///< Polynome décrivant la dérivée seconde de la coordonnée x en tout point de la courbe
+    rm::Algebre::Polynome _ddpolyY; ///< Polynome décrivant la dérivée seconde de la coordonnée y en tout point de la courbe
 
 
     // Exprime la courbe sous la forme d'un polynome
