@@ -308,9 +308,24 @@ void Courbe::buildPoly()
         pcY[i]=_pc[i].y;
     }
 
-
-    _polyX=deCasteljauPoly(pcX,_pc.size());
-    _polyY=deCasteljauPoly(pcY,_pc.size());
+    if(_pc.size()==4){
+        double coefsX[4];
+        coefsX[0]=pcX[0];
+        coefsX[1]=-3*pcX[0]+pcX[1];
+        coefsX[2]=-3*pcX[0]-2*pcX[1]+pcX[2];
+        coefsX[3]=pcX[1]+pcX[3]-pcX[0]-pcX[2];
+        _polyX.set(coefsX,3);
+        double coefsY[4];
+        coefsY[0]=pcY[0];
+        coefsY[1]=-3*pcY[0]+pcY[1];
+        coefsY[2]=-3*pcY[0]-2*pcY[1]+pcY[2];
+        coefsY[3]=pcY[1]+pcY[3]-pcY[0]-pcY[2];
+        _polyY.set(coefsY,3);
+    }
+    else{
+        _polyX=deCasteljauPoly(pcX,_pc.size());
+        _polyY=deCasteljauPoly(pcY,_pc.size());
+    }
     _dpolyX=_polyX.derivate();
     _dpolyY=_polyY.derivate();
     _ddpolyX=_dpolyX.derivate();
@@ -480,7 +495,7 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
         curve.set(pc);
 
         // Newton Rhapson
-
+        /*
         double last_t[pts.size()];
         double somLast=0;
         double somNext=0;
