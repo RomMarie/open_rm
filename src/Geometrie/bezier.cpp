@@ -451,7 +451,7 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
 
 
 
-    for(int iter=0;iter<50;iter++){
+    for(int iter=0;iter<5;iter++){
         I1=0;I2=0;II1=0;II2=0;III1=0;III2=0;
         D1=cv::Point2d(0,0);
         D2=cv::Point2d(0,0);
@@ -481,7 +481,7 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
         pc[2]=pc[3]+tanFin*alpha2;
 
         curve.set(pc,false);
-/*
+
         // Newton Rhapson
 
         double last_t[pts.size()];
