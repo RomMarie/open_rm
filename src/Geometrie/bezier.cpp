@@ -302,15 +302,15 @@ Algebre::Polynome Courbe::polyY(){
  */
 void Courbe::buildPoly()
 {
-    std::vector<double> pcX,pcY;
+    double pcX[_pc.size()],pcY[_pc.size()];
     for(unsigned int i=0;i<_pc.size();i++){
-        pcX.push_back(_pc[i].x);
-        pcY.push_back(_pc[i].y);
+        pcX[i]=_pc[i].x;
+        pcY[i]=_pc[i].y;
     }
 
 
-    _polyX=deCasteljauPoly(pcX);
-    _polyY=deCasteljauPoly(pcY);
+    _polyX=deCasteljauPoly(pcX,_pc.size());
+    _polyY=deCasteljauPoly(pcY,_pc.size());
     _dpolyX=_polyX.derivate();
     _dpolyY=_polyY.derivate();
     _ddpolyX=_dpolyX.derivate();
@@ -328,24 +328,21 @@ void Courbe::buildPoly()
  * \param pc points de controle considérés à une itération donnée
  * \return Polynome à une itération donnée
  */
-Algebre::Polynome Courbe::deCasteljauPoly(std::vector<double> Pc)
+Algebre::Polynome Courbe::deCasteljauPoly(double * Pc,int n)
 {
+
     std::vector<double> res;
-    if(Pc.size()==1){
-        res.push_back(Pc[0]);
-        return(rm::Algebre::Polynome(res));
+    if(n==1){
+        return(rm::Algebre::Polynome(&(Pc[0]),0));
     }
 
-    std::vector<double> poly1,poly2;
-    poly1.push_back(1);
-    poly1.push_back(-1);
-    poly2.push_back(0);
-    poly2.push_back(1);
+    double poly1[2],poly2[2];
+    poly1[0]=1;
+    poly1[1]=-1;
+    poly2[0]=0;
+    poly2[1]=1;
 
-    std::vector<double> v1,v2;
-    v1.insert(v1.begin(),Pc.begin(),Pc.begin()+Pc.size()-1);
-    v2.insert(v2.begin(),Pc.begin()+1,Pc.begin()+Pc.size());
-    return rm::Algebre::Polynome(poly1)*deCasteljauPoly(v1)+rm::Algebre::Polynome(poly2)*deCasteljauPoly(v2);
+    return rm::Algebre::Polynome(poly1,1)*deCasteljauPoly(Pc,n-1)+rm::Algebre::Polynome(poly2,1)*deCasteljauPoly(&(Pc[1]),n-1);
 }
 
 /*!
@@ -480,7 +477,7 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
         pc[1]=pc[0]+tanDeb*alpha1;
         pc[2]=pc[3]+tanFin*alpha2;
 
-        curve.set(pc,false);
+        curve.set(pc);
 
         // Newton Rhapson
 

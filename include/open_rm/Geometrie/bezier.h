@@ -54,7 +54,7 @@ private:
 
     // Exprime la courbe sous la forme d'un polynome
     void buildPoly();
-    rm::Algebre::Polynome deCasteljauPoly(std::vector<double> Pc);
+    rm::Algebre::Polynome deCasteljauPoly(double *Pc, int n);
 
     // Fonction interne computePt
     cv::Point2d deCasteljau(std::vector<cv::Point2d> Pc, float t);

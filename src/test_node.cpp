@@ -35,7 +35,7 @@ std::cout<<"test : "<<Poly1+Poly2<<std::endl;
 
     std::vector<rm::Geometrie::Bezier::Courbe> bcs;
 
-    for(int i=0;i<100000;i++)bcs=rm::Geometrie::Bezier::fitCubicCurves(skel,1);
+    for(int i=0;i<10000;i++)bcs=rm::Geometrie::Bezier::fitCubicCurves(skel,1);
 
     bcs[0].draw(img,cv::Scalar(255,0,255));
     for(unsigned int i=0;i<skel.size();i++){
