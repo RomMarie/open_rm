@@ -207,6 +207,7 @@ double Courbe::distToCurve(cv::Point2d pt,double& t)
     if(!_polyOK)
         buildPoly();
 
+
     // Calcul du polynome g(t)=Poly'(t).(pt-poly(t))
     rm::Algebre::Polynome g=_dpolyX*(rm::Algebre::Polynome(&(pt.x),0)-_polyX)+_dpolyY*(rm::Algebre::Polynome(&(pt.y),0)-_polyY);
     // Sequence de Sturm pour identifier la position des racines
@@ -252,6 +253,9 @@ double Courbe::distToCurve(cv::Point2d pt,double& t)
     // suivant le signe de la fonction g en son milieu.
     for(unsigned int i=0;i<intervalles.size();i++){
         while(intervalles[i].largeur()>0.00000001){
+
+
+
             long double gMilieu=g.compute(intervalles[i].milieu());
             if(gMilieu==0){
                 intervalles[i].set(intervalles[i].milieu(),intervalles[i].milieu(),1);
@@ -311,21 +315,23 @@ void Courbe::buildPoly()
     if(_pc.size()==4){
         double coefsX[4];
         coefsX[0]=pcX[0];
-        coefsX[1]=-3*pcX[0]+pcX[1];
-        coefsX[2]=-3*pcX[0]-2*pcX[1]+pcX[2];
-        coefsX[3]=pcX[1]+pcX[3]-pcX[0]-pcX[2];
+        coefsX[1]=-3*pcX[0]+3*pcX[1];
+        coefsX[2]=3*pcX[0]-6*pcX[1]+3*pcX[2];
+        coefsX[3]=3*pcX[1]+pcX[3]-pcX[0]-3*pcX[2];
         _polyX.set(coefsX,3);
         double coefsY[4];
         coefsY[0]=pcY[0];
-        coefsY[1]=-3*pcY[0]+pcY[1];
-        coefsY[2]=-3*pcY[0]-2*pcY[1]+pcY[2];
-        coefsY[3]=pcY[1]+pcY[3]-pcY[0]-pcY[2];
+        coefsY[1]=-3*pcY[0]+3*pcY[1];
+        coefsY[2]=3*pcY[0]-6*pcY[1]+3*pcY[2];
+        coefsY[3]=3*pcY[1]+pcY[3]-pcY[0]-3*pcY[2];
         _polyY.set(coefsY,3);
     }
     else{
         _polyX=deCasteljauPoly(pcX,_pc.size());
         _polyY=deCasteljauPoly(pcY,_pc.size());
     }
+
+
     _dpolyX=_polyX.derivate();
     _dpolyY=_polyY.derivate();
     _ddpolyX=_dpolyX.derivate();
@@ -396,7 +402,7 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
 {
 
     std::vector<Courbe> res;
-    Courbe curve;
+    Courbe curve,curve1m,curve1p,curve2m,curve2p;
 
     // Chord-length method pour la première estimation de la courbe
     double lCordes[pts.size()-1];
@@ -443,27 +449,36 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
     theta2=atan2(tanFin.y,tanFin.x);
 
     double S=0,S1m=0,S1p=0,S2m=0,S2p=0;
-    double theta1m=theta1-0.00001;
-    double theta1p=theta1+0.00001;
-    double theta2m=theta2-0.00001;
-    double theta2p=theta2+0.00001;
 
-    double t1xt1=tanDeb.x*tanDeb.x+tanDeb.y*tanDeb.y;
-    double t2xt2=tanFin.x*tanFin.x+tanFin.y*tanFin.y;
-    double t1xt2=tanDeb.x*tanFin.x+tanDeb.y*tanFin.y;
-    double B0,B1,B2,B3;
+    long double B0,B1,B2,B3;
 
-    double I1=0,I2=0,II1=0,II2=0,III1=0,III2=0;
+    long double I1=0,I2=0,II1=0,II2=0,III1=0,III2=0;
+    double I11m=0,I21m=0,II11m=0,II21m=0,III11m=0,III21m=0;
+    double I11p=0,I21p=0,II11p=0,II21p=0,III11p=0,III21p=0;
+    double I12m=0,I22m=0,II12m=0,II22m=0,III12m=0,III22m=0;
+    double I12p=0,I22p=0,II12p=0,II22p=0,III12p=0,III22p=0;
 
     cv::Point2d D1,D2;
 
-    std::vector<cv::Point2d> pc(4);
+    std::vector<cv::Point2d> pc(4),pc1m(4),pc1p(4),pc2m(4),pc2p(4);
     pc[0]=pts[0];
     pc[3]=pts[pts.size()-1];
 
+    pc1m[0]=pc[0];  pc1p[0]=pc[0];
+    pc2m[0]=pc[0];  pc2p[0]=pc[0];
+    pc1m[3]=pc[3];  pc1p[3]=pc[3];
+    pc2m[3]=pc[3];  pc2p[3]=pc[3];
 
+    for(int iter=0;iter<20000;iter++){
+        //std::cout<<iter<<std::endl;
 
-    for(int iter=0;iter<5;iter++){
+        tanDeb=cv::Point2d(cos(theta1),sin(theta1));
+        tanFin=cv::Point2d(cos(theta2),sin(theta2));
+        double theta1m=theta1-0.00001;
+        double theta1p=theta1+0.00001;
+        double theta2m=theta2-0.00001;
+        double theta2p=theta2+0.00001;
+
         I1=0;I2=0;II1=0;II2=0;III1=0;III2=0;
         D1=cv::Point2d(0,0);
         D2=cv::Point2d(0,0);
@@ -472,63 +487,178 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
             B1=bernstein.compute(1,t[i]);
             B2=bernstein.compute(2,t[i]);
             B3=bernstein.compute(3,t[i]);
+            I1+=(long double)B1*(long double)B1;
+            II2+=(long double)B2*(long double)B2;
+            II1+=(long double)B1*(long double)B2;
 
-            I1+=B1*B1;
-            II2+=B2*B2;
-            II1+=B1*B2;
-
-            D1+=B1*(pts[i]-pc[0]*(B0+B1)-pc[3]*(B2+B3));
-            D2+=B2*(pts[i]-pc[0]*(B0+B1)-pc[3]*(B2+B3));
+            D1.x+=B1*(pts[i].x-pc[0].x*(B0+B1)-pc[3].x*(B2+B3));
+            D1.y+=B1*(pts[i].y-pc[0].y*(B0+B1)-pc[3].y*(B2+B3));
+            D2.x+=B2*(pts[i].x-pc[0].x*(B0+B1)-pc[3].x*(B2+B3));
+            D2.y+=B2*(pts[i].y-pc[0].y*(B0+B1)-pc[3].y*(B2+B3));
 
         }
-        II1*=cos(theta1-theta2);
+
+        I11m=I1;        I11p=I1;
+        I12m=I1;        I12p=I1;
+
+        II11m=II1*cos(theta1m-theta2);        II11p=II1*cos(theta1p-theta2);
+        II12m=II1*cos(theta1-theta2m);        II12p=II1*cos(theta1-theta2p);
+        II1*=(long double)cos(theta1-theta2);
+
         I2=II1;
-        III1=cos(theta1)*D1.x+sin(theta1)*D1.y;
-        III2=cos(theta2)*D2.x+sin(theta2)*D2.y;
+        I21m=I2;        I21p=I2;
+        I22m=I2;        I22p=I2;
 
-        double alpha1=(III1*II2-III2*II1)/(I1*II2-I2*II1);
-        double alpha2=(I1*III2-I2*III1)/(I1*II2-I2*II1);
+        II21m=II2;  II21p=II2;
+        II22m=II2;  II22p=II2;
 
-        pc[1]=pc[0]+tanDeb*alpha1;
-        pc[2]=pc[3]+tanFin*alpha2;
+        III1=(long double)cos(theta1)*D1.x+(long double)sin(theta1)*D1.y;
+        III11m=cos(theta1m)*D1.x+sin(theta1m)*D1.y;
+        III11p=cos(theta1p)*D1.x+sin(theta1p)*D1.y;
+        III12m=III1;
+        III12p=III1;
+
+        III2=(long double)cos(theta2)*D2.x+(long double)sin(theta2)*D2.y;
+        III21m=III2;
+        III21p=III2;
+        III22m=cos(theta2m)*D2.x+sin(theta2m)*D2.y;
+        III22p=cos(theta2p)*D2.x+sin(theta2p)*D2.y;
+
+        long double alpha1=((long double)III1*(long double)II2-(long double)III2*(long double)II1)/
+                (long double)((long double)I1*(long double)II2-(long double)I2*(long double)II1);
+        long double alpha2=((long double)I1*(long double)III2-(long double)I2*(long double)III1)/
+                ((long double)I1*(long double)II2-(long double)I2*(long double)II1);
+
+            std::cout<<" Ligne 1 : "<<I1<<" "<<II1<<" "<<III1<<" "<<alpha1<<" "<<tanDeb<<std::endl;
+          std::cout<<" Ligne 2 : "<<I2<<" "<<II2<<" "<<III2<<" "<<alpha2<<" "<<tanFin<<std::endl;
+            std::cout<<" Numerateurs : "<<(III1*II2-III2*II1)<<" "<<(I1*III2-I2*III1)<<std::endl;
+          std::cout<<" Denominateur : "<<(I1*II2-I2*II1)<<std::endl;
+
+        double alpha11m=(long double)(III11m*II21m-III21m*II11m)/(long double)(I11m*II21m-I21m*II11m);
+        double alpha21m=(long double)(I11m*III21m-I21m*III11m)/(long double)(I11m*II21m-I21m*II11m);
+
+        double alpha11p=(long double)(III11p*II21p-III21p*II11p)/(long double)(I11p*II21p-I21p*II11p);
+        double alpha21p=(long double)(I11p*III21p-I21p*III11p)/(long double)(I11p*II21p-I21p*II11p);
+        double alpha12m=(long double)(III12m*II22m-III22m*II12m)/(long double)(I12m*II22m-I22m*II12m);
+        double alpha22m=(long double)(I12m*III22m-I22m*III12m)/(long double)(I12m*II22m-I22m*II12m);
+        double alpha12p=(long double)(III12p*II22p-III22p*II12p)/(long double)(I12p*II22p-I22p*II12p);
+        double alpha22p=(long double)(I12p*III22p-I22p*III12p)/(long double)(I12p*II22p-I22p*II12p);
+
+        pc[1]=pc[0]+tanDeb*(double)alpha1;
+        pc[2]=pc[3]+tanFin*(double)alpha2;
+
+        pc1m[1]=pc1m[0]+cv::Point2d(cos(theta1m),sin(theta1m))*alpha11m;
+        pc1p[1]=pc1p[0]+cv::Point2d(cos(theta1p),sin(theta1p))*alpha11p;
+        pc2m[1]=pc2m[0]+cv::Point2d(cos(theta1m),sin(theta1m))*alpha12m;
+        pc2p[1]=pc2p[0]+cv::Point2d(cos(theta1p),sin(theta1p))*alpha12p;
+
+        pc1m[2]=pc1m[3]+cv::Point2d(cos(theta2m),sin(theta2m))*alpha21m;
+        pc1p[2]=pc1p[3]+cv::Point2d(cos(theta2p),sin(theta2p))*alpha21p;
+        pc2m[2]=pc2m[3]+cv::Point2d(cos(theta2m),sin(theta2m))*alpha22m;
+        pc2p[2]=pc2p[3]+cv::Point2d(cos(theta2p),sin(theta2p))*alpha22p;
 
         curve.set(pc);
+        curve1m.set(pc1m,false);
+        curve2m.set(pc2m,false);
+        curve1p.set(pc1p,false);
+        curve2p.set(pc2p,false);
 
-        // Newton Rhapson
-        /*
-        double last_t[pts.size()];
-        double somLast=0;
-        double somNext=0;
+        double somMain=0;
+        double som1m=0;
+        double som2m=0;
+        double som1p=0;
+        double som2p=0;
         for(int i=0;i<pts.size();i++){
 
-            cv::Point2d f=curve.computePtPoly(t[i]);
-            cv::Point2d fPrime=curve.computePtPrime(t[i]);
-            cv::Point2d fPrimePrime=curve.computePtPrimePrime(t[i]);
-
-            cv::Point2d d=f-pts[i];
-
-            somLast+=cv::norm(d);
-            double numerator=d.x*fPrime.x+d.y*fPrime.y;
-            double denomi=fPrime.x*fPrime.x+fPrime.y*fPrime.y+d.x*fPrimePrime.x+d.y*fPrimePrime.y;
-            last_t[i]=t[i];
-            if(denomi!=0)
-                t[i]-=numerator/denomi;
-
-            cv::Point2d fNext=curve.computePtPoly(t[i]);
-            somNext+=cv::norm(fNext-pts[i]);
-
+            //            std::cout<<t[i]<<" ";
+            somMain+=cv::norm(pts[i]-curve.computePt(t[i]));
+            som1m+=cv::norm(pts[i]-curve1m.computePt(t[i]));
+            som1p+=cv::norm(pts[i]-curve1p.computePt(t[i]));
+            som2m+=cv::norm(pts[i]-curve2m.computePt(t[i]));
+            som2p+=cv::norm(pts[i]-curve2p.computePt(t[i]));
         }
+        //        std::cout<<std::endl;
 
-        if(somNext>somLast){
-            for(int i=0;i<pts.size();i++){
-                t[i]=last_t[i];
-            }
-            break;
+        double delta1=0,delta2=0;
+        double coef=0.0000001;
+        //  if((som1p<somMain&&som1m>somMain)||
+        //          (som1p>somMain&&som1m<somMain))
+        delta1=coef*(som1p-som1m)/0.00002;
+        //  if((som2p<somMain&&som2m>somMain)||
+        //          (som2p>somMain&&som2m<somMain))
+        delta2=coef*(som2p-som2m)/0.00002;
+
+        /*std::cout<<somMain<<std::endl;
+        std::cout<<"Thetas bornes : "<<theta1m<<" "<<theta1p<<" "<<theta2m<<" "<<theta2p<<std::endl;
+        std::cout<<"Sommes : "<<som1m<<" "<<som1p<<" "<<som2m<<" "<<som2p<<std::endl;
+        std::cout<<"Alphas : "<<alpha1<<" "<<alpha2<<std::endl;
+        std::cout<<"Deltas : "<<delta1<<" "<<delta2<<std::endl;
+        std::cout<<"Thetas : "<<theta1<<" "<<theta2<<std::endl<<std::endl;*/
+        if(0){//iter%10!=9){
+          //  if(iter%10!=9){
+            //theta1-=delta1;
+            //theta2-=delta2;
         }
-        else if(somLast/somNext<1.01)
-            break;
+        else{
+            // Newton Rhapson
+
+            double last_t[pts.size()];
+            double somLast=0;
+            double somNext=0;
+
+
+            std::cout<<"Thetas : "<<theta1<<" "<<theta2<<std::endl;
+            std::cout<<"SomMain : "<<somMain<<std::endl;
+
+//            for(double i=0.8;i<0.9;i+=0.001)
+  //              std::cout<<i<<" "<<cv::norm(pts[pts.size()-2]-curve.computePtPoly(i))<<std::endl;
+
+            for(int i=1;i<pts.size()-1;i++){
+
+                std::cout<<"Distances : "<<cv::norm(pts[i]-curve.computePtPoly(t[i]))<<" ";
+                std::cout<<curve.distToCurve(pts[i],t[i])<<" ";
+                std::cout<<cv::norm(pts[i]-curve.computePtPoly(t[i]))<<std::endl;
+
+
+
 
 /*
+                cv::Point2d f=curve.computePtPoly(t[i]);
+                cv::Point2d fPrime=curve.computePtPrime(t[i]);
+                cv::Point2d fPrimePrime=curve.computePtPrimePrime(t[i]);
+
+
+                cv::Point2d d=f-pts[i];
+
+                somLast+=cv::norm(d);
+                long double numerator=d.x*fPrime.x+d.y*fPrime.y;
+                long double denomi=fPrime.x*fPrime.x+fPrime.y*fPrime.y+d.x*fPrimePrime.x+d.y*fPrimePrime.y;
+
+                std::cout<<numerator<<" "<<denomi<<std::abortendl;
+                last_t[i]=t[i];
+                if(denomi!=0)
+                    t[i]-=numerator/denomi;
+                //              std::cout<<t[i]<<" ";
+
+                cv::Point2d fNext=curve.computePtPoly(t[i]);
+                somNext+=cv::norm(fNext-pts[i]);*/
+            }
+
+            std::cout<<std::endl;
+            //            std::cout<<std::endl;
+
+            //            std::cout<<somLast<<" "<<somNext<<std::endl;
+
+            if(somNext>somLast){
+                for(int i=0;i<pts.size();i++){
+                    t[i]=last_t[i];
+                }
+                break;
+            }
+            //else if(somLast/somNext<1.01)
+            //    break;
+
+        }
         cv::Mat img(500,500,CV_8UC3);
         for(int i=0;i<pts.size();i++){
             cv::line(img,pts[i],curve.computePtPoly(t[i]),cv::Scalar(0,255,0));
@@ -536,175 +666,13 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
         }
         //            cv::circle(img,pts[furtherPt],3,cv::Scalar(0,0,255));
         curve.draw(img,cv::Scalar(255,255,255));
-        cv::imshow("img",img);cv::waitKey();*/
+        curve1m.draw(img,cv::Scalar(255,0,0));
+        curve1p.draw(img,cv::Scalar(0,255,0));
+        curve2m.draw(img,cv::Scalar(255,255,0));
+        curve2p.draw(img,cv::Scalar(0,255,255));
+        cv::imshow("img",img);cv::waitKey();
 
     }
-    /*
-    int furtherPt;
-    double longestDist=0;
-
-    // Calcul des tangentes au premier et dernier points
-    cv::Point2d proj;
-    rm::Geometrie::Distances::pointToSegment2D(pts[1],pts[0],pts[2],proj);
-    cv::Point2d dir=2*pts[1]-proj;
-    cv::Point2d tanDeb;
-    tanDeb.x=(dir.x-pts[0].x)/cv::norm(dir-pts[0]);
-    tanDeb.y=(dir.y-pts[0].y)/cv::norm(dir-pts[0]);
-    cv::Point2d tanFin;
-    rm::Geometrie::Distances::pointToSegment2D(pts[pts.size()-2],pts[pts.size()-1],pts[pts.size()-3],proj);
-    dir=2*pts[pts.size()-2]-proj;
-    tanFin.x=(pts[pts.size()-1].x-dir.x)/cv::norm(pts[pts.size()-1]-dir);
-    tanFin.y=(pts[pts.size()-1].y-dir.y)/cv::norm(pts[pts.size()-1]-dir);
-
-
-    double scale=1;
-
-    for(int moveTan=0;moveTan<5;moveTan++){
-
-        for(int moveT=0;moveT<3;moveT++){
-
-            // Les quatre points de controle P0,P1,P2,P3 de la courbe de Bézier sont définis par:
-            // P0=pts[0]
-            // P1=pts[0]+alpha1*tanDeb
-            // P2=pts[pts.size()-1]+alpha2*tanFin
-            // P3=pts(pts.size()-1]
-            // Calcul d alpha1, alpha2 pour minimiser l'erreur quadratique moyenne
-            double x1=0,x2=0,c11=0,c12=0,c21=0,c22=0;
-
-
-            pc[0]=pts[0];
-            pc[3]=pts[pts.size()-1];
-            for (int i = 0; i < pts.size(); i++) {
-                cv::Point2d v1=tanDeb*3*t[i]*(1-t[i])*(1-t[i]);
-                cv::Point2d v2=tanFin*3*t[i]*t[i]*(1-t[i]);
-                c11+=v1.x*v1.x+v1.y*v1.y;
-                c22+=v2.x*v2.x+v2.y*v2.y;
-                c12+=v1.x*v2.x+v1.y*v2.y;
-
-                cv::Point2d tmp=pts[i]-(pc[0]*(1.-t[i])*(1.-t[i])*(1.-t[i])+
-                        pc[0]*3*(1.-t[i])*(1.-t[i])*t[i]+
-                        pc[3]*3*(1.-t[i])*t[i]*t[i]+
-                        pc[3]*t[i]*t[i]*t[i]);
-
-                x1+=v1.x*tmp.x+v1.y*tmp.y;
-                x2+=v2.x*tmp.x+v2.y*tmp.y;
-            }
-            c21=c12;
-
-
-            double det_c1_c2=c11*c22-c12*c21;
-            double det_c1_x=c11*x2-c12*x1;
-            double det_x_c2=x1*c21-x2*c22;
-            double alpha1,alpha2;
-            if(det_c1_c2==0){
-                alpha1=0;
-                alpha2=0;
-            }
-            else{
-                alpha1=det_x_c2/det_c1_c2;
-                alpha2=det_c1_x/det_c1_c2;
-            }
-
-
-            // Calcul des points de controle de la courbe
-
-            // Si l'un des alpha est négatif ou nul, on définit la courbe comme un segment
-            // Et on botte en touche jusqu'à la prochaine subdivision
-            if (0){//alpha1 <=0 || alpha2 <=0){
-                double dist = cv::norm(pc[0]-pc[3]) / 3.0;
-                pc[1]=pc[0]+tanDeb*dist;
-                pc[2]=pc[3]+tanFin*dist;
-            }
-            else{
-                pc[1]=pc[0]+tanDeb*alpha1;
-                pc[2]=pc[3]+tanFin*alpha2;
-            }
-
-            curve.set(pc);
-
-            // Newton Rhapson
-            for(int i=0;i<pts.size();i++){
-
-                cv::Point2d f=curve.computePtPoly(t[i]);
-                cv::Point2d fPrime=curve.computePtPrime(t[i]);
-                cv::Point2d fPrimePrime=curve.computePtPrimePrime(t[i]);
-
-                cv::Point2d d=f-pts[i];
-
-//                std::cout<<f<<" "<<fPrime<<" "<<fPrimePrime<<" "<<d<<std::endl;
-
-                double numerator=d.x*fPrime.x+d.y*fPrime.y;
-                double denomi=fPrime.x*fPrime.x+fPrime.y*fPrime.y+d.x*fPrimePrime.x+d.y*fPrimePrime.y;
-
-                if(denomi!=0)
-                    t[i]-=numerator/denomi;
-
-            }
-           cv::Mat img(500,500,CV_8UC3);
-            for(int i=0;i<pts.size();i++){
-                cv::line(img,pts[i],curve.computePtPoly(t[i]),cv::Scalar(0,255,0));
-                cv::circle(img,pts[i],3,cv::Scalar(255,0,0));
-            }
-//            cv::circle(img,pts[furtherPt],3,cv::Scalar(0,0,255));
-            curve.draw(img,cv::Scalar(255,255,255));
-            cv::imshow("img",img);cv::waitKey();
-        }
-        // On bouge une des deux tangentes si un point est trop loin
-        longestDist=0;
-
-        for(unsigned int i=1;i<pts.size()-1;i++){
-            //double t;
-            double dist=curve.distToCurve(pts[i],t[i]);
-            if(dist>longestDist){
-                longestDist=dist;
-                furtherPt=i;
-            }
-        }
-        if(longestDist>thres){
-            if(t[furtherPt]<=0.5){
-
-                cv::Point2d ptCurve=curve.computePtPoly(t[furtherPt]);
-                cv::Point2d vecDir=pts[furtherPt]-ptCurve;
-                cv::Point2d newPc;
-                cv::Point2d proj,proj2;
-                double dist=rm::Geometrie::Distances::pointToSegment2D(pts[furtherPt],pc[0],pc[1],proj);
-
-                vecDir=pts[furtherPt]-curve.computePt(t[furtherPt]);
-                pc[1]+=0.5*vecDir;
-                pc[2]+=0.5*vecDir;
-                tanDeb=pc[1]-pc[0];
-                tanDeb.x/=cv::norm(tanDeb);
-                tanDeb.y/=cv::norm(tanDeb);
-                tanFin=pc[3]-pc[2];
-                tanFin.x/=cv::norm(tanFin);
-                tanFin.y/=cv::norm(tanFin);
-
-            }
-            else{
-                cv::Point2d ptCurve=curve.computePtPoly(t[furtherPt]);
-                cv::Point2d vecDir=pts[furtherPt]-ptCurve;
-                cv::Point2d newPc;
-                cv::Point2d proj;
-
-                //rm::Geometrie::Distances::pointToSegment2D(pts[furtherPt],pc[2],pc[3],proj);
-
-                vecDir=pts[furtherPt]-curve.computePt(t[furtherPt]);
-                pc[1]+=.5*vecDir;
-                pc[2]+=.5*vecDir;
-                tanDeb=pc[1]-pc[0];
-                tanDeb.x/=cv::norm(tanDeb);
-                tanDeb.y/=cv::norm(tanDeb);
-                tanFin=pc[3]-pc[2];
-                tanFin.x/=cv::norm(tanFin);
-                tanFin.y/=cv::norm(tanFin);
-
-            }
-        }
-    }
-
-
-*/
-
     res.push_back(curve);
 
     return res;

@@ -326,7 +326,7 @@ Polynome Polynome::operator*(const Polynome &poly)
     poly.coefs(coefs,degrePoly2);
     for(unsigned int i=0;i<=degrePoly2;i++){
         for(unsigned int j=0;j<_coefs.size();j++){
-            res[i+j]+=coefs[i]*_coefs[j];
+            res[i+j]+=(long double)coefs[i]*(long double)_coefs[j];
         }
     }
     return Polynome(res,dim);
