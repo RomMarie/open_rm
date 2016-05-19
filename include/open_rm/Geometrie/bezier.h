@@ -24,7 +24,7 @@ public:
     void set(std::vector<cv::Point2d> ptsControle, bool withPoly=true);
     unsigned int degre();
     Courbe split();
-    cv::Point2d computePt(double t);
+    cv::Point2d computePt(long double t);
     cv::Point2d computePtPoly(double t);
     cv::Point2d computePtPrime(double t);
     cv::Point2d computePtPrimePrime(double t);
@@ -33,7 +33,7 @@ public:
 
     void draw(cv::Mat& img, cv::Scalar color=cv::Scalar(255,255,255), bool withPC=true);
     void movePtCtrl(int ind, cv::Point2d dir, double scale);
-    double distToCurve(cv::Point2d pt, double &t);
+    double distToCurve(cv::Point2d pt, long double &t);
 
     rm::Algebre::Polynome polyX();
     rm::Algebre::Polynome polyY();
@@ -57,7 +57,7 @@ private:
     rm::Algebre::Polynome deCasteljauPoly(double *Pc, int n);
 
     // Fonction interne computePt
-    cv::Point2d deCasteljau(std::vector<cv::Point2d> Pc, float t);
+    cv::Point2d deCasteljau(std::vector<cv::Point2d> Pc, double t);
 
 };
 

@@ -23,13 +23,21 @@ int main(int argc,char ** argv){
     skel.push_back(cv::Point2d(20,360));*/
 
 
-    skel.push_back(cv::Point2d(100,100));
+    /*skel.push_back(cv::Point2d(100,100));
         skel.push_back(cv::Point2d(120,150));
         skel.push_back(cv::Point2d(150,190));
         skel.push_back(cv::Point2d(200,220));
         skel.push_back(cv::Point2d(250,240));
         skel.push_back(cv::Point2d(300,250));
-        skel.push_back(cv::Point2d(350,270));
+        skel.push_back(cv::Point2d(350,270));*/
+
+            skel.push_back(cv::Point2d(350,270));
+            skel.push_back(cv::Point2d(300,250));
+            skel.push_back(cv::Point2d(250,240));
+            skel.push_back(cv::Point2d(200,220));
+            skel.push_back(cv::Point2d(150,190));
+            skel.push_back(cv::Point2d(120,150));
+            skel.push_back(cv::Point2d(100,100));
 
     std::vector<double> poly1,poly2;
     poly1.push_back(1);
