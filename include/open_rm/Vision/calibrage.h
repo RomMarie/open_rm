@@ -4,6 +4,9 @@
 
 
 namespace rm{
+/*!
+ * Namespace gérant les aspects vision
+ */
 namespace Vision{
 
 /*!

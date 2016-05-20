@@ -4,6 +4,10 @@
 #include <opencv2/opencv.hpp>
 
 namespace rm{
+
+/*!
+ * Namespace gérant les outils d'analyse par intervalle
+ */
 namespace Intervalles{
 
 
