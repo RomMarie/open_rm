@@ -571,29 +571,12 @@ std::vector<Courbe> computeAndSplit(std::vector<cv::Point2d> pts, double thres, 
 
         // A11
         float A11=0;
-        for(int i=0;i<pts.size();i++){
-            B1=bernstein.compute(1,t[i]);
-
-            A11+=B1*B1;
-        }
 
         // A22
         float A22=0;
-        for(int i=0;i<pts.size();i++){
-            B2=bernstein.compute(2,t[i]);
-
-            A22+=B2*B2;
-        }
 
         // A12 A21
         float A12=0,A21=0;
-        for(int i=0;i<pts.size();i++){
-            B1=bernstein.compute(1,t[i]);
-            B2=bernstein.compute(2,t[i]);
-
-            A21+=cos(theta1-theta2)*B1*B2;
-            A12+=cos(theta1-theta2)*B1*B2;
-        }
 
         // X1 / X2
         float X1=0;
@@ -604,6 +587,13 @@ std::vector<Courbe> computeAndSplit(std::vector<cv::Point2d> pts, double thres, 
             B2=bernstein.compute(2,t[i]);
             B3=bernstein.compute(3,t[i]);
 
+
+            A11+=B1*B1;
+
+            A22+=B2*B2;
+
+            A21+=B1*B2;
+
             float tmpx=pts[i].x-(B0+B1)*pc[0].x-(B2+B3)*pc[3].x;
             float tmpy=pts[i].y-(B0+B1)*pc[0].y-(B2+B3)*pc[3].y;
 
@@ -611,6 +601,8 @@ std::vector<Courbe> computeAndSplit(std::vector<cv::Point2d> pts, double thres, 
             X2+=tmpx*cos(theta2)*B2+tmpy*sin(theta2)*B2;
         }
 
+        A21*=cos(theta1-theta2);
+        A12=A21;
         float den=1./(A11*A22-A12*A21);
         float num1=X1*A22-X2*A12;
         float num2=A11*X2-A21*X1;
@@ -661,6 +653,7 @@ std::vector<Courbe> computeAndSplit(std::vector<cv::Point2d> pts, double thres, 
         ptsDeb.insert(ptsDeb.begin(),pts.begin(),pts.begin()+pMax+1);
         std::vector<Courbe> resDeb=computeAndSplit(ptsDeb,thres,theta1,thetaM);
         res.insert(res.end(),resDeb.begin(),resDeb.end());
+
         std::vector<cv::Point2d> ptsFin;
         ptsFin.insert(ptsFin.begin(),pts.begin()+pMax,pts.end());
         std::vector<Courbe> resFin=computeAndSplit(ptsFin,thres,thetaM,theta2);

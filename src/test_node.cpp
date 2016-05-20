@@ -58,7 +58,7 @@ int main(int argc,char ** argv){
 
     std::vector<rm::Geometrie::Bezier::Courbe> bcs;
 
-    for(int i=0;i<1;i++)bcs=rm::Geometrie::Bezier::fitCubicCurves(skel,10);
+    for(int i=0;i<1000;i++)bcs=rm::Geometrie::Bezier::fitCubicCurves(skel,10);
 
     for(unsigned int i=0;i<bcs.size();i++){
         bcs[i].draw(img,cv::Scalar(0,128*i-1,255),false);
