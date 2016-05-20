@@ -35,6 +35,8 @@ public:
     void movePtCtrl(int ind, cv::Point2d dir, double scale);
     double distToCurve(cv::Point2d pt, long double &t);
 
+    friend std::ostream& operator<<(std::ostream& os, const Courbe& poly);
+
     rm::Algebre::Polynome polyX();
     rm::Algebre::Polynome polyY();
 
@@ -62,6 +64,9 @@ private:
 };
 
 std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts,double thres);
+std::vector<Courbe> computeAndSplit(std::vector<cv::Point2d> pts, double thres, double theta1, double theta2);
+
+
 }
 }
 }

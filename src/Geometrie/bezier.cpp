@@ -289,6 +289,21 @@ double Courbe::distToCurve(cv::Point2d pt,long double& t)
 }
 
 /*!
+ * \brief rm::Geometrie::Bezier::Courbe::operator <<
+ * \param os
+ * \param poly
+ * \return
+ */
+std::ostream &operator<<(std::ostream &os, const Courbe &poly)
+{
+    std::cout<<"{ ";
+    for(int i=0;i<poly.pc().size();i++){
+        std::cout<<poly.pc()[i]<<" ";
+    }
+    std::cout<<"}"<<std::endl;
+}
+
+/*!
  * \brief Met à disposition le polynome suivant X définissant la ocurbe
  * \return Polynome suivant x
  */
@@ -452,7 +467,7 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
     tanFin.y=(-pts[pts.size()-1].y+dir.y)/cv::norm(pts[pts.size()-1]-dir);
     theta2=atan2((long double)tanFin.y,(long double)tanFin.x);
 
-    long double B0,B1,B2,B3;
+    float B0,B1,B2,B3;
 
     cv::Point2d D1,D2;
 
@@ -460,22 +475,110 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
     pc[0]=pts[0];
     pc[3]=pts[pts.size()-1];
 
+    double dMax;
+    int pMax;
 
-    for(int iter=0;iter<20000;iter++){
+
+    return computeAndSplit(pts,thres,theta1,theta2);
+
+    //    return res;
+
+
+}
+
+/*!
+ * \brief Approxime un nuage de points par une unique courbe de Bézier cubique
+ *
+ * \note fortement inspiré de Philip J. Schneider's "Algorithm for Automatically Fitting Digitized Curves" from the book "Graphics Gems"
+ * \param pts Nuage de points à approximer (le premier et le dernier sont les extrémités de la courbe)
+ * \param thres Distance maximale entre un point et la courbe
+ * \param theta1 Angle de la tangente au premier point de controle
+ * \param theta2 Angle de la tangente au second point de controle
+ * \return Courbe de bézier définissant la courbe totale
+ */
+std::vector<Courbe> computeAndSplit(std::vector<cv::Point2d> pts, double thres, double theta1, double theta2)
+{
+    double dMax;
+    int pMax;
+
+    if(pts.size()==2){
+        float alpha1,alpha2;
+        if(cos(theta1)*(pts[1].x-pts[0].x)+sin(theta1)*(pts[1].y-pts[0].y)>0)
+            alpha1=cv::norm(pts[0]-pts[1])/3.;
+        else
+            alpha1=-cv::norm(pts[0]-pts[1])/3.;
+        if(cos(theta2)*(pts[1].x-pts[0].x)+sin(theta2)*(pts[1].y-pts[0].y)<0)
+            alpha2=cv::norm(pts[0]-pts[1])/3.;
+        else
+            alpha2=-cv::norm(pts[0]-pts[1])/3.;
+
+        Courbe curve;
+        std::vector<Courbe> res2;
+
+        std::vector<cv::Point2d> pc(4);
+        pc[0]=pts[0];
+        pc[3]=pts[pts.size()-1];
+        pc[1].x=pc[0].x+cos(theta1)*alpha1;
+        pc[1].y=pc[0].y+sin(theta1)*alpha1;
+        pc[2].x=pc[3].x+cos(theta2)*alpha2;
+        pc[2].y=pc[3].y+sin(theta2)*alpha2;
+
+
+
+
+        curve.set(pc);
+        res2.push_back(curve);
+        return res2;
+    }
+    else{
+
+    Courbe curve;
+    // Chord-length method pour la première estimation de la courbe
+    double lCordes[pts.size()-1];
+    double som=0;
+    for(unsigned int i=0;i<pts.size()-1;i++){
+        lCordes[i]=cv::norm(pts[i]-pts[i+1]);
+        som+=lCordes[i];
+    }
+    long double t[pts.size()];
+    t[0]=0;
+    for(unsigned int i=1;i<pts.size()-1;i++){
+        t[i]=t[i-1]+lCordes[i]/som;
+    }
+    t[pts.size()-1]=1;
+
+    struct Bernstein{
+        long double compute(int i,long double t){
+            long double res;
+            switch(i){
+            case 0:res= (1-t)*(1-t)*(1-t);break;
+            case 1:res= 3*t*(1-t)*(1-t);break;
+            case 2:res= 3*t*t*(1-t);break;
+            case 3:res= t*t*t;break;
+            default:return 0;
+            }
+            return res;
+        }
+    };
+    Bernstein bernstein;
+
+    float B0,B1,B2,B3;
+    std::vector<cv::Point2d> pc(4);
+    pc[0]=pts[0];
+    pc[3]=pts[pts.size()-1];
+
+    for(int iter=0;iter<5;iter++){
 
         // A11
-        long double A11=0;
+        float A11=0;
         for(int i=0;i<pts.size();i++){
             B1=bernstein.compute(1,t[i]);
 
-
             A11+=B1*B1;
-
-            std::cout<<A11<<" ";
         }
 
         // A22
-        long double A22=0;
+        float A22=0;
         for(int i=0;i<pts.size();i++){
             B2=bernstein.compute(2,t[i]);
 
@@ -483,7 +586,7 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
         }
 
         // A12 A21
-        long double A12=0,A21=0;
+        float A12=0,A21=0;
         for(int i=0;i<pts.size();i++){
             B1=bernstein.compute(1,t[i]);
             B2=bernstein.compute(2,t[i]);
@@ -493,28 +596,28 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
         }
 
         // X1 / X2
-        long double X1=0;
-        long double X2=0;
+        float X1=0;
+        float X2=0;
         for(int i=0;i<pts.size();i++){
             B0=bernstein.compute(0,t[i]);
             B1=bernstein.compute(1,t[i]);
             B2=bernstein.compute(2,t[i]);
             B3=bernstein.compute(3,t[i]);
 
-            long double tmpx=pts[i].x-pc[0].x*(B0+B1)-pc[3].x*(B2+B3);
-            long double tmpy=pts[i].y-pc[0].y*(B0+B1)-pc[3].y*(B2+B3);
+            float tmpx=pts[i].x-(B0+B1)*pc[0].x-(B2+B3)*pc[3].x;
+            float tmpy=pts[i].y-(B0+B1)*pc[0].y-(B2+B3)*pc[3].y;
 
             X1+=tmpx*cos(theta1)*B1+tmpy*sin(theta1)*B1;
             X2+=tmpx*cos(theta2)*B2+tmpy*sin(theta2)*B2;
         }
-        std::cout<<std::endl;
 
-        long double den=A11*A22-A12*A21;
-        long double num1=X1*A22-X2*A12;
-        long double num2=A11*X2-A21*X1;
+        float den=1./(A11*A22-A12*A21);
+        float num1=X1*A22-X2*A12;
+        float num2=A11*X2-A21*X1;
 
-        long double alpha1=num1/den;
-        long double alpha2=num2/den;
+
+        float alpha1=num1*den;
+        float alpha2=num2*den;
 
         pc[1].x=pc[0].x+cos(theta1)*alpha1;
         pc[1].y=pc[0].y+sin(theta1)*alpha1;
@@ -524,30 +627,51 @@ std::vector<Courbe> fitCubicCurves(std::vector<cv::Point2d> pts, double thres)
 
         curve.set(pc);
 
-
         // Convergence
         double som=0,somPrev=0,som2=0;
+        dMax=0;
         for(int i=0;i<pts.size();i++){
-            somPrev+=cv::norm(pts[i]-curve.computePt(t[i]));
+            double dist=cv::norm(pts[i]-curve.computePtPoly(t[i]));
+            somPrev+=dist;
+            if(dist>=dMax){
+                dMax=dist;
+                pMax=i;
+            }
             som+=curve.distToCurve(pts[i],t[i]);
         }
 
-        std::cout<<somPrev<<" "<<som<<" "<<alpha1<<" "<<alpha2<<std::endl;
-        cv::Mat img(500,500,CV_8UC3);
+/*       cv::Mat img(1000,1000,CV_8UC3);
         for(int i=0;i<pts.size();i++){
-            cv::line(img,pts[i],curve.computePtPoly(t[i]),cv::Scalar(0,255,0));
             cv::circle(img,pts[i],3,cv::Scalar(255,0,0));
         }
-        //            cv::circle(img,pts[furtherPt],3,cv::Scalar(0,0,255));
-        curve.draw(img,cv::Scalar(255,255,255));
-        cv::imshow("img",img);cv::waitKey();
-
+        curve.draw(img,cv::Scalar(255,255,0));
+        cv::imshow("img",img);cv::waitKey();*/
     }
-    res.push_back(curve);
+
+    std::vector<Courbe> res;
+
+    if(dMax>thres){
+        cv::Point2d tanMid;
+        tanMid.x=(pts[pMax-1].x-pts[pMax+1].x)/cv::norm(pts[pMax-1]-pts[pMax+1]);
+        tanMid.y=(pts[pMax-1].y-pts[pMax+1].y)/cv::norm(pts[pMax-1]-pts[pMax+1]);
+        double thetaM=atan2(tanMid.y,tanMid.x);
+
+        // split
+        std::vector<cv::Point2d> ptsDeb;
+        ptsDeb.insert(ptsDeb.begin(),pts.begin(),pts.begin()+pMax+1);
+        std::vector<Courbe> resDeb=computeAndSplit(ptsDeb,thres,theta1,thetaM);
+        res.insert(res.end(),resDeb.begin(),resDeb.end());
+        std::vector<cv::Point2d> ptsFin;
+        ptsFin.insert(ptsFin.begin(),pts.begin()+pMax,pts.end());
+        std::vector<Courbe> resFin=computeAndSplit(ptsFin,thres,thetaM,theta2);
+        res.insert(res.end(),resFin.begin(),resFin.end());
+    }
+    else{
+        res.push_back(curve);
+    }
 
     return res;
-
-
+    }
 }
 
 }
