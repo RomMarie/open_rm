@@ -1,15 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(open_rm)
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge image_transport)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Qt5Core REQUIRED)
 
-find_package( Qt4 4.5.0 COMPONENTS QtCore QtXml REQUIRED )
+find_package( Qt4 4.5.0 COMPONENTS QtCore QtXml QtGui REQUIRED )
 include(${QT_USE_FILE})
-
-include_directories(include ${Qt5Core_INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRECTORIES} ${OpenCV_INCLUDE_DIRECTORIES})
 
 catkin_package(
   INCLUDE_DIRS include
@@ -28,6 +26,8 @@ vision
 visionomni
   DEPENDS OpenCV Boost
 )
+
+include_directories(include ${catkin_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRECTORIES} ${OpenCV_INCLUDE_DIRS})
 
 
 add_library(algebre
@@ -84,6 +84,8 @@ include/open_rm/VisionOmni/omnidma.h src/VisionOmni/omnidma.cpp
 include/open_rm/VisionOmni/paramscalib.h src/VisionOmni/paramscalib.cpp)
 target_link_libraries(visionomni ${QT_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(rm_dir_to_image src/Noeuds/rm_dir_to_image.cpp)
+target_link_libraries(rm_dir_to_image ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(test_node src/test_node.cpp)
 target_link_libraries(test_node geometrie algebre ${OpenCV_LIBRARIES})
