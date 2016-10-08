@@ -5,4 +5,9 @@
         <param name="frame_rate" type="double" value="30."/>
         <param name="input_dir" type="string" value="/home/mix"/>
     </node>
+
+    <node name="skeletonization" pkg="open_rm" type="rm_mask_to_skel">
+        <param name="delta" type="double" value="10"/>
+        <remap from="input_mask" to="input_image"/>
+    </node>
 </launch>

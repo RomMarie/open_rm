@@ -120,7 +120,7 @@ int main(int argc,char ** argv){
     nh.param<std::string>("input_dir",directory,"");
 
     image_transport::ImageTransport it(nh);
-    image_transport::Publisher pub=it.advertise("input_image",0);
+    image_transport::Publisher pub=it.advertise("/input_image",0);
 
     ros::Rate loop_rate(framerate);
 

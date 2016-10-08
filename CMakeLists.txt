@@ -93,7 +93,7 @@ add_executable(rm_dir_to_image src/Noeuds/rm_dir_to_image.cpp)
 target_link_libraries(rm_dir_to_image ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(rm_mask_to_skel src/Noeuds/rm_mask_to_skel.cpp)
-target_link_libraries(rm_mask_to_skel ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(rm_mask_to_skel axemedian ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(test_node src/test_node.cpp)
 target_link_libraries(test_node geometrie algebre ${OpenCV_LIBRARIES})
