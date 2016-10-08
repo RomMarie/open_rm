@@ -1,13 +1,18 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(open_rm)
 
-find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge image_transport)
+
+find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge image_transport roslaunch)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Qt5Core REQUIRED)
 
+FILE(GLOB LaunchFiles "launch/*.launch")
+add_custom_target(launch SOURCES ${LaunchFiles})
+
 find_package( Qt4 4.5.0 COMPONENTS QtCore QtXml QtGui REQUIRED )
 include(${QT_USE_FILE})
+
 
 catkin_package(
   INCLUDE_DIRS include
@@ -86,6 +91,9 @@ target_link_libraries(visionomni ${QT_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(rm_dir_to_image src/Noeuds/rm_dir_to_image.cpp)
 target_link_libraries(rm_dir_to_image ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(rm_mask_to_skel src/Noeuds/rm_mask_to_skel.cpp)
+target_link_libraries(rm_mask_to_skel ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(test_node src/test_node.cpp)
 target_link_libraries(test_node geometrie algebre ${OpenCV_LIBRARIES})

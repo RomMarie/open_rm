@@ -1,0 +1,8 @@
+<launch>
+    <node name="image_loader" pkg="open_rm" type="rm_dir_to_image">
+        <param name="cyclic" type="bool" value="true"/>
+        <param name="is_color" type="bool" value="true"/>
+        <param name="frame_rate" type="double" value="5."/>
+        <param name="input_dir" type="string" value="/home/mix"/>
+    </node>
+</launch>

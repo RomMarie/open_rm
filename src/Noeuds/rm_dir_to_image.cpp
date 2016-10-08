@@ -104,30 +104,30 @@ ImageDirectory::ImageDirectory(std::string dir, bool withCycle){
 int main(int argc,char ** argv){
     ros::init(argc,argv,"rm_dir_to_image");
 
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
 
     // Lecture des paramètres
     bool withCycle;
     nh.param("cyclic",withCycle,false);
 
-    std::string output;
-    nh.param<std::string>("out_topic",output,"input_image");
-
     double framerate;
-    nh.param("framerate",framerate,1.);
+    nh.param("frame_rate",framerate,1.);
 
     bool isColor;
     nh.param("is_color",isColor,false);
 
+    std::string directory;
+    nh.param<std::string>("input_dir",directory,"");
+
     image_transport::ImageTransport it(nh);
-    image_transport::Publisher pub=it.advertise(output,0);
+    image_transport::Publisher pub=it.advertise("input_image",0);
 
     ros::Rate loop_rate(framerate);
 
     cv::Mat img;
     sensor_msgs::ImagePtr msg;
 
-    ImageDirectory repertoire("/home/mix/Pictures",withCycle);
+    ImageDirectory repertoire(directory,withCycle);
 
     img=cv::imread(repertoire.current(),isColor);
     while(ros::ok()){
