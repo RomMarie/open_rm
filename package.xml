@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>open_rm</name>
-  <version>0.0.0</version>
-  <description>The open_rm package</description>
+<name>open_rm</name>
+<version>0.0.0</version>
+<description>The open_rm package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
@@ -39,13 +39,15 @@
   <!--   <run_depend>message_runtime</run_depend> -->
   <!-- Use test_depend for packages you need only for testing: -->
   <!--   <test_depend>gtest</test_depend> -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>gencpp</build_depend>
   <build_depend>roslaunch</build_depend>
   <buildtool_depend>catkin</buildtool_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- Other tools can request additional information be placed here -->
+  <!-- Other tools can request additional information be placed here -->
 
   </export>
-</package>
+  </package>

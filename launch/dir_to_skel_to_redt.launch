@@ -11,4 +11,8 @@
         <param name="onlyConnected" type="bool" value="true"/>
         <remap from="input_mask" to="input_image"/>
     </node>
+
+    <node name="reverse_edt" pkg="open_rm" type="rm_mat_to_redt">
+        <remap from="medial_axis_transform" to="raw_mat"/>
+    </node>
 </launch>

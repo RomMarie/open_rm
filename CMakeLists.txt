@@ -2,17 +2,22 @@ cmake_minimum_required(VERSION 2.8.3)
 project(open_rm)
 
 
-find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge image_transport roslaunch)
+find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge image_transport roslaunch gencpp dynamic_reconfigure)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Qt5Core REQUIRED)
 
-FILE(GLOB LaunchFiles "launch/*.launch")
-add_custom_target(launch SOURCES ${LaunchFiles})
+FILE(GLOB launchFiles "launch/*.launch")
+add_custom_target(launch SOURCES ${launchFiles})
+
+FILE(GLOB cfgFiles "cfg/*.cfg")
+add_custom_target(cfg SOURCES ${cfgFiles})
 
 find_package( Qt4 4.5.0 COMPONENTS QtCore QtXml QtGui REQUIRED )
 include(${QT_USE_FILE})
 
+generate_dynamic_reconfigure_options( cfg/mask_to_skel.cfg)
+include_directories(${dynamic_reconfigure_PACKAGE_PATH}/cmake/cfgbuild.cmake)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -89,11 +94,20 @@ include/open_rm/VisionOmni/omnidma.h src/VisionOmni/omnidma.cpp
 include/open_rm/VisionOmni/paramscalib.h src/VisionOmni/paramscalib.cpp)
 target_link_libraries(visionomni ${QT_LIBRARIES} ${OpenCV_LIBRARIES})
 
+# Noeud lisant un répertoire d'images et le publiant sur le réseau ROS
 add_executable(rm_dir_to_image src/Noeuds/rm_dir_to_image.cpp)
 target_link_libraries(rm_dir_to_image ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+# Noeud lisant une image binaire et publiant son squelette sur le réseau ROS (algorithme du DMA)
 add_executable(rm_mask_to_skel src/Noeuds/rm_mask_to_skel.cpp)
-target_link_libraries(rm_mask_to_skel axemedian ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_dependencies(rm_mask_to_skel ${PROJECT_NAME}_gencfg)
+target_link_libraries(rm_mask_to_skel axemedian blobs ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+# Noeud lisant une transformée en axe médian et publiant la forme reconstruite sur le réseau ROS
+add_executable(rm_mat_to_redt src/Noeuds/rm_mat_to_redt.cpp)
+add_dependencies(rm_mat_to_redt ${PROJECT_NAME}_gencfg)
+target_link_libraries(rm_mat_to_redt axemedian ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+# Noeud pour tester les algos en cours
 add_executable(test_node src/test_node.cpp)
 target_link_libraries(test_node geometrie algebre ${OpenCV_LIBRARIES})
