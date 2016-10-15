@@ -33,6 +33,9 @@ std::vector<cv::Point> largestBlob8Connexe(const cv::Mat& mask);
 // Colorie les blobs pour affichage
 cv::Mat colorizeBlobs(const cv::Mat& img);
 
+// Nombre de blobs
+unsigned int nBlobs8Connexe(const cv::Mat& mask);
+
 }
 }
 #endif // BLOBS_H

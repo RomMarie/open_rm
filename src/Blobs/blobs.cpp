@@ -333,6 +333,16 @@ cv::Mat colorizeBlobs(const cv::Mat &img)
     return res.clone();
 }
 
+/*!
+ * \brief Détermine le nombre de composantes connexes d'un masque
+ * \param mask Masque binaire dont on cherche le nombre de composantes connexes
+ * \return Nombre de composantes connexes
+ */
+unsigned int nBlobs8Connexe(const cv::Mat &mask)
+{
+    return allBlob8Connexe(mask).size();
+}
+
 
 
 }

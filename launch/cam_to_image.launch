@@ -1,0 +1,4 @@
+<launch>
+    <node name="cam_reader" pkg="open_rm" type="rm_cam_to_image" required="true">
+    </node>
+</launch>

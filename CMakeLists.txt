@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(open_rm)
 
 
-find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge image_transport roslaunch gencpp dynamic_reconfigure)
+find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge tf laser_geometry image_transport roslaunch gencpp dynamic_reconfigure)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Qt5Core REQUIRED)
@@ -37,7 +37,7 @@ visionomni
   DEPENDS OpenCV Boost
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRECTORIES} ${OpenCV_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${Eigen_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRECTORIES} ${Boost_INCLUDE_DIRECTORIES} ${OpenCV_INCLUDE_DIRS})
 
 
 add_library(algebre
@@ -98,6 +98,18 @@ target_link_libraries(visionomni ${QT_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(rm_dir_to_image src/Noeuds/rm_dir_to_image.cpp)
 target_link_libraries(rm_dir_to_image ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+# Noeud publiant l'image acquise par une caméra sur le réseau ROS
+add_executable(rm_cam_to_image src/Noeuds/rm_cam_to_img.cpp)
+target_link_libraries(rm_cam_to_image ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+# Noeud simulant une caméra virtuelle sur le réseau ROS
+add_executable(rm_virtualcam_to_image src/Noeuds/rm_virtualcam_to_image.cpp)
+target_link_libraries(rm_virtualcam_to_image ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+# Noeud projetant un nuage de point dans l'image acquise par uen caméra
+add_executable(rm_pointcloud_to_camera src/Noeuds/rm_pointcloud_to_camera)
+target_link_libraries(rm_pointcloud_to_camera ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 # Noeud lisant une image binaire et publiant son squelette sur le réseau ROS (algorithme du DMA)
 add_executable(rm_mask_to_skel src/Noeuds/rm_mask_to_skel.cpp)
 add_dependencies(rm_mask_to_skel ${PROJECT_NAME}_gencfg)
@@ -107,6 +119,18 @@ target_link_libraries(rm_mask_to_skel axemedian blobs ${QT_LIBRARIES} ${catkin_L
 add_executable(rm_mat_to_redt src/Noeuds/rm_mat_to_redt.cpp)
 add_dependencies(rm_mat_to_redt ${PROJECT_NAME}_gencfg)
 target_link_libraries(rm_mat_to_redt axemedian ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+# Noeud lisant un répertoire d'images et le publiant sur le réseau ROS
+add_executable(rm_skel_to_graph src/Noeuds/rm_skel_to_graph.cpp)
+target_link_libraries(rm_skel_to_graph axemedian blobs ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+# Noeud simple exécutant une commande système
+add_executable(rm_laserscan_to_tf_pointcloud src/Noeuds/rm_laserscan_to_tf_pointcloud.cpp)
+target_link_libraries(rm_laserscan_to_tf_pointcloud ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+
+# Noeud simple exécutant une commande système
+add_executable(rm_system_cmd src/Noeuds/rm_system_cmd.cpp)
+target_link_libraries(rm_system_cmd ${catkin_LIBRARIES})
 
 # Noeud pour tester les algos en cours
 add_executable(test_node src/test_node.cpp)

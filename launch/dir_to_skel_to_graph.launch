@@ -2,8 +2,8 @@
     <node name="image_loader" pkg="open_rm" type="rm_dir_to_image" required="true">
         <param name="cyclic" type="bool" value="true"/>
         <param name="is_color" type="bool" value="true"/>
-        <param name="frame_rate" type="double" value="3."/>
-        <param name="input_dir" type="string" value="/home/mix/Dropbox/Shared-Brice"/>
+        <param name="frame_rate" type="double" value="30."/>
+        <param name="input_dir" type="string" value="/home/mix"/>
     </node>
 
     <node name="skeletonization" pkg="open_rm" type="rm_mask_to_skel">
@@ -12,7 +12,7 @@
         <remap from="input_mask" to="input_image"/>
     </node>
 
-    <node name="reverse_edt" pkg="open_rm" type="rm_mat_to_redt">
-        <remap from="medial_axis_transform" to="raw_mat"/>
+    <node name="graphization" pkg="open_rm" type="rm_skel_to_graph">
+        <remap from="skeleton" to="raw_skeleton"/>
     </node>
 </launch>
