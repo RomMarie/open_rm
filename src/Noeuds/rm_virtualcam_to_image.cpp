@@ -7,9 +7,9 @@ int main(int argc,char ** argv){
     ros::init(argc,argv,"virtualcam_to_img");
     ros::NodeHandle nh("~");
     image_transport::ImageTransport it(nh);
-    image_transport::Publisher pub_img=it.advertise("virtual_image",1);
+    image_transport::Publisher pub_img=it.advertise("/virtual_image",1);
 
-    ros::Publisher pub_info=nh.advertise<sensor_msgs::CameraInfo>("camera_info",1);
+    ros::Publisher pub_info=nh.advertise<sensor_msgs::CameraInfo>("/camera_info",1);
 
 
     std::string frame;
@@ -44,7 +44,7 @@ int main(int argc,char ** argv){
     camInfo.header.frame_id=frame;
 
 
-    cv::Mat img(height,width,CV_8UC3);
+    cv::Mat img=cv::Mat::zeros(height,width,CV_8UC3);
     ros::Rate loop_rate(fps);
     std_msgs::Header header;
     header.frame_id=frame;
@@ -56,7 +56,7 @@ int main(int argc,char ** argv){
 
         pub_info.publish(camInfo);
         msg = cv_bridge::CvImage(header, "rgb8", img).toImageMsg();
-
+        pub_img.publish(msg);
         ros::spinOnce();
         loop_rate.sleep();
     }

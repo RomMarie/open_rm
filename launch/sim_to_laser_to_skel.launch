@@ -28,7 +28,9 @@
     </node>
 
     <!-- Conversion nuage de point vers image binaire (droites verticales) -->
-
+    <node name="pointCloud_to_virtualCam" pkg="open_rm" type="rm_pointcloud_to_camera">
+        <remap from="/image_in" to="/virtual_image"/>
+    </node>
 
     <!-- Squelettisation du masque -->
     <node name="skeletonization" pkg="open_rm" type="rm_mask_to_skel">

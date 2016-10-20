@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 2.8.3)
 project(open_rm)
 
 
-find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge tf laser_geometry image_transport roslaunch gencpp dynamic_reconfigure)
+find_package(catkin REQUIRED COMPONENTS roscpp
+    image_geometry
+    cv_bridge tf laser_geometry image_transport roslaunch gencpp dynamic_reconfigure)
 find_package(OpenCV REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Qt5Core REQUIRED)
@@ -107,7 +109,7 @@ add_executable(rm_virtualcam_to_image src/Noeuds/rm_virtualcam_to_image.cpp)
 target_link_libraries(rm_virtualcam_to_image ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 # Noeud projetant un nuage de point dans l'image acquise par uen caméra
-add_executable(rm_pointcloud_to_camera src/Noeuds/rm_pointcloud_to_camera)
+add_executable(rm_pointcloud_to_camera src/Noeuds/rm_pointcloud_to_camera.cpp   )
 target_link_libraries(rm_pointcloud_to_camera ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 # Noeud lisant une image binaire et publiant son squelette sur le réseau ROS (algorithme du DMA)
@@ -124,9 +126,14 @@ target_link_libraries(rm_mat_to_redt axemedian ${QT_LIBRARIES} ${catkin_LIBRARIE
 add_executable(rm_skel_to_graph src/Noeuds/rm_skel_to_graph.cpp)
 target_link_libraries(rm_skel_to_graph axemedian blobs ${QT_LIBRARIES} ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-# Noeud simple exécutant une commande système
+# Noeud qui convertit une nappe laser (rho,theta) en un nuage de point (X,Y,Z)
 add_executable(rm_laserscan_to_tf_pointcloud src/Noeuds/rm_laserscan_to_tf_pointcloud.cpp)
 target_link_libraries(rm_laserscan_to_tf_pointcloud ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
+
+# Noeud qui projette un nuage de points dans l'image acquise par une caméra
+add_executable(rm_laser_to_image src/Noeuds/rm_laser_to_image.cpp)
+target_link_libraries(rm_laser_to_image ${catkin_LIBRARIES})
+
 
 # Noeud simple exécutant une commande système
 add_executable(rm_system_cmd src/Noeuds/rm_system_cmd.cpp)

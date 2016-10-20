@@ -79,7 +79,6 @@ int main(int argc, char** argv){
     nh.param("delta",delta,1.);
     nh.param("onlyConnected",onlyConnected,false);
 
-
     // Initialisation du serveur de reconfiguration dynamique
     dynamic_reconfigure::Server<open_rm::mask_to_skelConfig> srv;
     dynamic_reconfigure::Server<open_rm::mask_to_skelConfig>::CallbackType f;

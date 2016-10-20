@@ -1,0 +1,28 @@
+<launch>
+    <!-- Coordonnées (X,Y,Z) de la caméra virtuelle dans le repère robot -->
+    <arg name="X_cam" value="0.0"/>
+    <arg name="Y_cam" value="0.0"/>
+    <arg name="Z_cam" value="4.0"/>
+
+    <!-- Lancement de la simuulation -->
+    <node name="morse_sim" pkg="open_rm" type="rm_system_cmd" required="true">
+        <param name="command" type="string" value="morse run sim"/>
+    </node>
+
+    <!-- Définition des transformations rigides -->
+    <!-- robot -> laser -->
+    <node pkg="tf" type="static_transform_publisher" name="laser_broadcaster"
+    args="0 0 .2 0 0 0 base_link base_laser_link 10"/>
+    <!-- robot -> camera -->
+    <!--<node pkg="tf" type="static_transform_publisher" name="virtual_camera_broadcaster"
+    args="$(arg X_cam) $(arg Y_cam) $(arg Z_cam) 1.5708 3.1415 0 base_link camera_frame 10"/>-->
+    <node pkg="tf" type="static_transform_publisher" name="virtual_camera_broadcaster"
+    args="$(arg X_cam) $(arg Y_cam) $(arg Z_cam) -1.5708 0 -1.5708 base_link camera_frame 10"/>
+
+    <!-- Projection nappe laser dans image caméra -->
+    <node name="laser_to_image" pkg="open_rm" type="rm_laser_to_image">
+        <remap from="/image" to="/robot/camera/image"/>
+        <remap from="/laser" to="/robot/hokuyo_scan"/>
+    </node>
+
+</launch>
