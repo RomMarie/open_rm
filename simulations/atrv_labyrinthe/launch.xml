@@ -1,0 +1,27 @@
+<launch>
+<!-- Hauteur du centre de gravité du robot par rapport au sol -->
+<arg name="Z_rob" value="0.0835"/> <!-- robot ATRV -->
+<!-- Coordonnées de la caméra virtuelle dans le repère robot -->
+<arg name="X_cam" value="0.0"/>
+<arg name="Y_cam" value="0.0"/>
+<arg name="Z_cam" value="4.0"/>
+<!-- Coordonnées du télémètre laser dans le repère robot -->
+<arg name="X_las" value="0.0"/>
+<arg name="Y_las" value="0.0"/>
+<arg name="Z_las" value="1.0"/>
+
+<!-- Lancement de la simulation -->
+<node name="morse_sim" pkg="open_rm" type="rm_system_cmd" required="true">
+    <param name="command" type="string" value="morse run atrv_labyrinthe"/>
+</node>
+<!-- Définition des transformations rigides -->
+<!-- robot -> sol -->
+<node pkg="tf" type="static_transform_publisher" name="ground_broadcaster"
+args="0 0 -$(arg Z_rob) 0 0 0 base_link robot/sol 10"/>
+<!-- robot -> laser -->
+<node pkg="tf" type="static_transform_publisher" name="laser_broadcaster"
+args="$(arg X_las) $(arg Y_las) $(arg Z_las) 0 0 0 base_link robot/laser 10"/>
+<!-- robot -> camera (Bird Eye View) -->
+<node pkg="tf" type="static_transform_publisher" name="camera_broadcaster"
+args="$(arg X_cam) $(arg Y_cam) $(arg Z_cam) 1.5708  3.1415 0 base_link robot/camera 10"/>
+</launch>

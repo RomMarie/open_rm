@@ -17,7 +17,7 @@ private:
     cv::Mat img_;
     tf::TransformListener listener_;
     laser_geometry::LaserProjection projector_;
-    std::string camera_frame_;
+    std::string camera_frame_,laser_frame_;
     image_geometry::PinholeCameraModel cam_model_;
 public:
     worker():nh_("~"),it_(nh_),img_(0,0,CV_8U)
@@ -25,6 +25,8 @@ public:
         sub_ = it_.subscribeCamera("/image", 1, &worker::cbImg, this);
         sub_laser_ = nh_.subscribe("/laser", 1, &worker::cbLaser, this);
         pub_ = it_.advertise("/image_out",1);
+        camera_frame_=nh_.resolveName("/camera_frame");
+        laser_frame_=nh_.resolveName("/laser_frame");
     }
 
     void cbImg(const sensor_msgs::ImageConstPtr& image_msg,
@@ -42,13 +44,14 @@ public:
         }
     }
 
-    void cbLaser(const sensor_msgs::LaserScanConstPtr& msg)
+    void cbLaser(const sensor_msgs::LaserScanPtr& msg)
     {
         sensor_msgs::PointCloud cloud;
         try
         {
-            listener_.waitForTransform("camera_frame","base_laser_link",ros::Time(0),ros::Duration(2));
-            projector_.transformLaserScanToPointCloud("camera_frame",*msg, cloud,listener_);
+            listener_.waitForTransform(camera_frame_,laser_frame_,ros::Time::now(),ros::Duration(0.3));
+            msg->header.frame_id=laser_frame_; // Pas beau, mais seul moyen de permettre plusieurs lasers depuis le simulateur
+            projector_.transformLaserScanToPointCloud(camera_frame_,*msg, cloud,listener_);
         }
         catch (tf::TransformException& e)
         {

@@ -15,6 +15,9 @@ add_custom_target(launch SOURCES ${launchFiles})
 FILE(GLOB cfgFiles "cfg/*.cfg")
 add_custom_target(cfg SOURCES ${cfgFiles})
 
+FILE(GLOB_RECURSE simulations "simulations/*.*")
+add_custom_target(simulations SOURCES ${simulations})
+
 find_package( Qt4 4.5.0 COMPONENTS QtCore QtXml QtGui REQUIRED )
 include(${QT_USE_FILE})
 
