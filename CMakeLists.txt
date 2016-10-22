@@ -18,6 +18,12 @@ add_custom_target(cfg SOURCES ${cfgFiles})
 FILE(GLOB_RECURSE simulations "simulations/*.*")
 add_custom_target(simulations SOURCES ${simulations})
 
+FILE(GLOB_RECURSE robots "robots/*.*")
+add_custom_target(robots SOURCES ${robots})
+
+FILE(GLOB_RECURSE taches "taches/*.*")
+add_custom_target(taches SOURCES ${taches})
+
 find_package( Qt4 4.5.0 COMPONENTS QtCore QtXml QtGui REQUIRED )
 include(${QT_USE_FILE})
 

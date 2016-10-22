@@ -3,6 +3,18 @@
 from morse.builder import *
 import random
 from math import floor
+from lxml import etree
+
+# -------- Chargement des paramètres du système à partir de modele.xml ---------
+tree = etree.parse("/home/mix/workspace/src/open_rm/simulations/atrv_labyrinthe/modele.xml")
+for args in tree.xpath("/launch/arg"):
+    if args.get("name") == "Z_cam":
+        Z_cam = float(args.get("value"))
+    if args.get("name") == "Z_las":
+        Z_las = float(args.get("value"))
+    if args.get("name") == "Z_rob":
+        Z_rob = float(args.get("value"))
+
 
 # -------- Initialisation aléatoire du robot dans le labyrinthe --------
 # Taille du labyrinthe :
@@ -20,7 +32,7 @@ poseTheta = random.uniform(0,6.28)
 
 # Déclaration et positionnement du robot
 robot = ATRV()
-robot.translate(poseX, poseY, 0.1)
+robot.translate(poseX, poseY, Z_rob)
 robot.rotate(0.0, 0.0, poseTheta)
 
 # On ajoute une commande (v,omega) au robot
@@ -45,7 +57,7 @@ hokuyo.properties(resolution = 0.5)
 hokuyo.properties(scan_window = 360.)
 hokuyo.properties(laser_range = 30.0)
 hokuyo.name = 'laser/scan'
-hokuyo.translate(x = 0.0,y = 0.0, z = 1.0)
+hokuyo.translate(x = 0.0,y = 0.0, z = Z_las)
 hokuyo.rotate(x = 0.0,y = 0.0, z = 0.0)
 robot.append(hokuyo)
 
@@ -54,7 +66,7 @@ robot.append(hokuyo)
 # Positionnement : Bird Eye View
 camera=VideoCamera()
 camera.properties(cam_height=500,cam_width=500,cam_focal=15)
-camera.translate(x = 0.0,y = 0.0, z = 4)
+camera.translate(x = 0.0,y = 0.0, z = Z_cam)
 camera.rotate(x = 0.0,y =-1.57, z = 0.0)
 robot.append(camera)
 
@@ -62,7 +74,7 @@ robot.append(camera)
 robot.add_default_interface('ros')
 
 # On charge le modèle de l'environnement
-env = Environment('/home/mix/workspace/src/open_rm/simulations/atrv_labyrinthe/lab_15x15.blend', fastmode = False)
+env = Environment('/home/mix/workspace/src/open_rm/simulations/maps/lab_15x15.blend', fastmode = False)
 
 # On place une caméra dans blender pour la visualisation du scénario
 env.set_camera_location([.0, .0, 95.0])

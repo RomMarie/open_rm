@@ -11,7 +11,7 @@
                 - /robot/camera/camera_info : Paramètres intrinsèques de la caméra
                 - /robot/laser/scan : Nappe laser
     -->
-    <include file="$(find open_rm)/simulations/atrv_labyrinthe/launch.xml"/>
+    <include file="$(find open_rm)/simulations/atrv_labyrinthe/modele.xml"/>
 
     <!-- Projection nappe laser dans image caméra -->
     <node name="laser_to_image" pkg="open_rm" type="rm_laser_to_image">
